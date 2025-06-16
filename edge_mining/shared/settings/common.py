@@ -1,31 +1,31 @@
 """Collection of Common Objects for the Settings shared domain of the Edge Mining application."""
 
-from enum import Enum
+from enum import StrEnum
 
-class PersistenceAdapter(Enum):
+class PersistenceAdapter(StrEnum):
     IN_MEMORY = "in_memory"
     SQLITE = "sqlite"
 
-class EnergyMonitorAdapter(Enum):
+class EnergyMonitorAdapter(StrEnum):
     DUMMY = "dummy"
     HOME_ASSISTANT = "home_assistant"
 
-class MinerControllerAdapter(Enum):
+class MinerControllerAdapter(StrEnum):
     DUMMY = "dummy"
 
-class ForecastProviderAdapter(Enum):
+class ForecastProviderAdapter(StrEnum):
     DUMMY = "dummy"
     HOME_ASSISTANT = "home_assistant"
 
-class HomeForecastProviderAdapter(Enum):
+class HomeForecastProviderAdapter(StrEnum):
     DUMMY = "dummy"
 
-class NotificationAdapter(Enum):
+class NotificationAdapter(StrEnum):
     DUMMY = "dummy"
     TELEGRAM = "telegram"
 
-class PerformaceTrackerAdapter(Enum):
+class PerformaceTrackerAdapter(StrEnum):
     DUMMY = "dummy"
 
-class ExternalServiceAdapter(Enum):
+class ExternalServiceAdapter(StrEnum):
     HOME_ASSISTANT = "home_assistant"

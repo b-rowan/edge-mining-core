@@ -1,13 +1,16 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 import os
+from .common import *
 
 # Using pydantic-settings for easy environment variable loading
 
+ROOT_PATH = Path(__file__).parent.parent.parent
+
 # Helper to define a default path in the project directory
-DEFAULT_SQLITE_DB_PATH = os.path.join(os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-), 'edgemining.db')
+DEFAULT_SQLITE_DB_PATH = ROOT_PATH.joinpath('edgemining.db')
 
 class AppSettings(BaseSettings):
     # Application settings
@@ -16,15 +19,15 @@ class AppSettings(BaseSettings):
     timezome: str = "Europe/Rome" # Default timezone
 
     # Adapters Configuration (select which ones to use)
-    energy_monitor_adapter: str = "home_assistant" # Options: "dummy", "home_assistant"
-    miner_controller_adapter: str = "dummy" # Options: "dummy", "vnish"
-    forecast_provider_adapter: str = "home_assistant" # Options: "dummy", "home_assistant"
-    home_forecast_adapter: str = "dummy" # Options: "dummy", "ml_model"
-    persistence_adapter: str = "sqlite" # Options: "in_memory", "sqlite"
-    notification_adapter: str = "dummy" # Options: "dummy", "telegram"
-    performance_tracker_adapter: str = "dummy" # Options: "dummy", "braiins"
+    energy_monitor_adapter: EnergyMonitorAdapter = EnergyMonitorAdapter.HOME_ASSISTANT # Options: "dummy", "home_assistant"
+    miner_controller_adapter: MinerControllerAdapter = MinerControllerAdapter.DUMMY # Options: "dummy", "vnish"
+    forecast_provider_adapter: ForecastProviderAdapter = ForecastProviderAdapter.HOME_ASSISTANT # Options: "dummy", "home_assistant"
+    home_forecast_adapter: HomeForecastProviderAdapter = HomeForecastProviderAdapter.DUMMY # Options: "dummy", "ml_model"
+    persistence_adapter: PersistenceAdapter = PersistenceAdapter.SQLITE # Options: "in_memory", "sqlite"
+    notification_adapter: NotificationAdapter = NotificationAdapter.DUMMY # Options: "dummy", "telegram"
+    performance_tracker_adapter: PerformaceTrackerAdapter = PerformaceTrackerAdapter.DUMMY # Options: "dummy", "braiins"
 
-    sqlite_db_file: str = DEFAULT_SQLITE_DB_PATH # SQLite file path
+    sqlite_db_file: Path = DEFAULT_SQLITE_DB_PATH # SQLite file path
 
     api_port: int = 8001
 

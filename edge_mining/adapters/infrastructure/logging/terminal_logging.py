@@ -7,6 +7,8 @@ import traceback
 from pprint import pformat
 
 from edge_mining.shared.logging.port import LoggerPort
+from edge_mining.shared.settings.settings import ROOT_PATH
+
 
 class TerminalLogger(LoggerPort):
     """Terminal logger class."""
@@ -98,7 +100,7 @@ class TerminalLogger(LoggerPort):
         """Welcome message in the terminal."""
 
         print("\n\n")
-        with open("edge_mining/welcome.txt", "r") as f:
+        with open(ROOT_PATH.joinpath("welcome.txt"), "r") as f:
             print(f.read())
         print("\n\n")
 
