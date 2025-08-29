@@ -97,10 +97,6 @@ class AdapterServiceInterface(ABC):
     def clear_all_services(self):
         """Clear external services cache"""
 
-    @abstractmethod
-    def test_rules(self, rules: List[AutomationRule], decisional_context: DecisionalContext) -> bool:
-        """Test a specific automation rule against a given context."""
-
 
 class OptimizationServiceInterface(ABC):
     """Base interface for optimization services in the Edge Mining application."""
