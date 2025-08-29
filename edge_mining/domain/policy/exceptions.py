@@ -15,8 +15,20 @@ class PolicyNotFoundError(PolicyError):
     pass
 
 
+class PolicyAlreadyExistsError(PolicyError):
+    """Optimization policy already exists."""
+
+    pass
+
+
 class InvalidRuleError(PolicyError):
     """Invalid automation rule."""
+
+    pass
+
+
+class RuleNotFoundError(PolicyError):
+    """Automation rule not found."""
 
     pass
 
