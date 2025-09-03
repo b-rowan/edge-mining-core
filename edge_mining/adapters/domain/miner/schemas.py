@@ -1,5 +1,6 @@
 """Validation schemas for miner domain."""
 
+import ipaddress
 import uuid
 from typing import Dict, Optional, Union, cast
 
@@ -12,6 +13,7 @@ from edge_mining.domain.miner.value_objects import HashRate
 from edge_mining.shared.adapter_configs.miner import (
     MinerControllerDummyConfig,
     MinerControllerGenericSocketHomeAssistantAPIConfig,
+    MinerControllerPyASICConfig,
 )
 from edge_mining.shared.adapter_maps.miner import MINER_CONTROLLER_CONFIG_TYPE_MAP
 from edge_mining.shared.interfaces.config import MinerControllerConfig
@@ -523,10 +525,43 @@ class MinerControllerGenericSocketHomeAssistantAPIConfigSchema(BaseModel):
         validate_assignment = True
 
 
+class MinerControllerPyASICConfigSchema(BaseModel):
+    """Schema for MinerControllerPyASICConfig."""
+
+    ip: str = Field(..., description="IP address of the PyASIC miner")
+
+    @field_validator("ip")
+    @classmethod
+    def validate_ip(cls, v: str) -> str:
+        """Validate that the value is a plausible IP address."""
+        v = v.strip()
+        if not v:
+            raise ValueError("IP address must be a non-empty string")
+        try:
+            ipaddress.ip_address(str(v))
+        except ValueError as e:
+            raise ValueError(f"Invalid IP address: {v}") from e
+        return v
+
+    def to_model(self) -> MinerControllerPyASICConfig:
+        """
+        Convert schema to MinerControllerPyASICConfig adapter configuration model instance.
+        """
+
+        return MinerControllerPyASICConfig(ip=self.ip)
+
+    class Config:
+        """Pydantic configuration."""
+
+        use_enum_values = True
+        validate_assignment = True
+
+
 MINER_CONTROLLER_CONFIG_SCHEMA_MAP: Dict[
     type[MinerControllerConfig],
     Union[type[MinerControllerDummyConfigSchema], type[MinerControllerGenericSocketHomeAssistantAPIConfigSchema]],
 ] = {
     MinerControllerDummyConfig: MinerControllerDummyConfigSchema,
     MinerControllerGenericSocketHomeAssistantAPIConfig: MinerControllerGenericSocketHomeAssistantAPIConfigSchema,
+    MinerControllerPyASICConfig: MinerControllerPyASICConfigSchema,
 }
