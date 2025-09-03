@@ -51,10 +51,12 @@ from edge_mining.domain.policy.ports import OptimizationPolicyRepository
 from edge_mining.domain.user.common import UserId
 from edge_mining.domain.user.entities import SystemSettings
 from edge_mining.shared.adapter_maps.energy import (
+    ENERGY_MONITOR_CONFIG_TYPE_MAP,
     ENERGY_MONITOR_TYPE_EXTERNAL_SERVICE_MAP,
     ENERGY_SOURCE_TYPE_FORECAST_PROVIDER_CONFIG_MAP,
     ENERGY_SOURCE_TYPE_FORECAST_PROVIDER_TYPE_MAP,
 )
+from edge_mining.shared.adapter_maps.external_services import EXTERNAL_SERVICE_CONFIG_TYPE_MAP
 from edge_mining.shared.adapter_maps.forecast import FORECAST_PROVIDER_TYPE_EXTERNAL_SERVICE_MAP
 from edge_mining.shared.adapter_maps.miner import MINER_CONTROLLER_CONFIG_TYPE_MAP
 from edge_mining.shared.adapter_maps.notification import NOTIFIER_TYPE_EXTERNAL_SERVICE_MAP
@@ -259,6 +261,18 @@ class ConfigurationService(ConfigurationServiceInterface):
 
         self.logger.debug(f"External Service {external_service.id} ({external_service.name}) is valid.")
         return True
+
+    def get_external_service_config_by_type(
+        self, adapter_type: ExternalServiceAdapter
+    ) -> Optional[type[ExternalServiceConfig]]:
+        """Get the configuration class for a specific external service adapter type."""
+        self.logger.debug(f"Getting configuration for external service adapter {adapter_type}")
+        if adapter_type not in EXTERNAL_SERVICE_CONFIG_TYPE_MAP:
+            raise ExternalServiceConfigurationError(
+                f"Adapter type {adapter_type} is not supported for external service configuration."
+            )
+
+        return EXTERNAL_SERVICE_CONFIG_TYPE_MAP.get(adapter_type, None)
 
     # --- Energy Source Management ---
     def create_energy_source(
@@ -587,6 +601,17 @@ class ConfigurationService(ConfigurationServiceInterface):
 
         self.logger.debug(f"Energy monitor {energy_monitor.id} ({energy_monitor.name}) is valid.")
         return True
+
+    def get_energy_monitor_config_by_type(
+        self, adapter_type: EnergyMonitorAdapter
+    ) -> Optional[type[EnergyMonitorConfig]]:
+        """Get the configuration class for a specific energy monitor adapter type."""
+        self.logger.debug(f"Getting configuration for energy monitor adapter {adapter_type}")
+        if adapter_type not in ENERGY_MONITOR_CONFIG_TYPE_MAP:
+            raise EnergyMonitorConfigurationError(
+                f"Adapter type {adapter_type} is not supported for energy monitor configuration."
+            )
+        return ENERGY_MONITOR_CONFIG_TYPE_MAP.get(adapter_type, None)
 
     # --- Forecast Provider Management ---
     def create_forecast_provider(

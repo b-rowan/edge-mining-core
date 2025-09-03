@@ -6,12 +6,13 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-# Import routers after DI setup functions are defined
+from edge_mining.adapters.domain.energy.fast_api.router import router as energy_router
 from edge_mining.adapters.domain.miner.fast_api.router import router as miner_router
 from edge_mining.adapters.domain.policy.fast_api.router import router as policy_router
 
 # Import dependency injection setup functions
 from edge_mining.adapters.infrastructure.api.setup import get_logger, get_optimization_service, get_service_container
+from edge_mining.adapters.infrastructure.external_services.fast_api.router import router as external_services_router
 from edge_mining.application.services.optimization_service import OptimizationService
 from edge_mining.shared.logging.port import LoggerPort
 
@@ -65,8 +66,10 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(energy_router, prefix="/api/v1", tags=["energy"])
 app.include_router(miner_router, prefix="/api/v1", tags=["mining"])
 app.include_router(policy_router, prefix="/api/v1", tags=["optimization_rules"])
+app.include_router(external_services_router, prefix="/api/v1", tags=["external_services"])
 # Add more routers here (e.g., for configuration)
 
 
