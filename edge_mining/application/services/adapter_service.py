@@ -4,19 +4,30 @@ This service is responsible for creating and managing adapters for the applicati
 
 from typing import Dict, List, Optional, Union
 
-from edge_mining.adapters.domain.energy.monitors.dummy_solar import DummySolarEnergyMonitorFactory
-from edge_mining.adapters.domain.energy.monitors.home_assistant_api import HomeAssistantAPIEnergyMonitorFactory
-from edge_mining.adapters.domain.forecast.providers.dummy_solar import DummyForecastProviderFactory
-from edge_mining.adapters.domain.forecast.providers.home_assistant_api import HomeAssistantForecastProviderFactory
-from edge_mining.adapters.domain.home_load.providers.dummy import DummyHomeForecastProvider
+from edge_mining.adapters.domain.energy.dummy_solar import (
+    DummySolarEnergyMonitorFactory,
+)
+from edge_mining.adapters.domain.energy.home_assistant_api import (
+    HomeAssistantAPIEnergyMonitorFactory,
+)
+from edge_mining.adapters.domain.forecast.dummy_solar import (
+    DummyForecastProviderFactory,
+)
+from edge_mining.adapters.domain.forecast.home_assistant_api import (
+    HomeAssistantForecastProviderFactory,
+)
+from edge_mining.adapters.domain.home_load.dummy import DummyHomeForecastProvider
 from edge_mining.adapters.domain.miner.controllers.dummy import DummyMinerController
 from edge_mining.adapters.domain.miner.controllers.generic_socket_home_assistant_api import (
     GenericSocketHomeAssistantAPIMinerControllerAdapterFactory,
 )
-from edge_mining.adapters.domain.notification.notifiers.dummy import DummyNotifier
-from edge_mining.adapters.domain.notification.notifiers.telegram import TelegramNotifierFactory
-from edge_mining.adapters.domain.performance.trackers.dummy import DummyMiningPerformanceTracker
-from edge_mining.adapters.infrastructure.homeassistant.homeassistant_api import ServiceHomeAssistantAPIFactory
+from edge_mining.adapters.domain.miner.controllers.pyasic import PyASICMinerControllerAdapterFactory
+from edge_mining.adapters.domain.notification.dummy import DummyNotifier
+from edge_mining.adapters.domain.notification.telegram import TelegramNotifierFactory
+from edge_mining.adapters.domain.performance.dummy import DummyMiningPerformanceTracker
+from edge_mining.adapters.infrastructure.homeassistant.homeassistant_api import (
+    ServiceHomeAssistantAPIFactory,
+)
 from edge_mining.adapters.infrastructure.rule_engine.common import RuleEngineType
 from edge_mining.adapters.infrastructure.rule_engine.factory import RuleEngineFactory
 from edge_mining.application.interfaces import AdapterServiceInterface
@@ -26,10 +37,16 @@ from edge_mining.domain.energy.entities import EnergyMonitor, EnergySource
 from edge_mining.domain.energy.ports import EnergyMonitorPort, EnergyMonitorRepository
 from edge_mining.domain.forecast.common import ForecastProviderAdapter
 from edge_mining.domain.forecast.entities import ForecastProvider
-from edge_mining.domain.forecast.ports import ForecastProviderPort, ForecastProviderRepository
+from edge_mining.domain.forecast.ports import (
+    ForecastProviderPort,
+    ForecastProviderRepository,
+)
 from edge_mining.domain.home_load.common import HomeForecastProviderAdapter
 from edge_mining.domain.home_load.entities import HomeForecastProvider
-from edge_mining.domain.home_load.ports import HomeForecastProviderPort, HomeForecastProviderRepository
+from edge_mining.domain.home_load.ports import (
+    HomeForecastProviderPort,
+    HomeForecastProviderRepository,
+)
 from edge_mining.domain.miner.common import MinerControllerAdapter
 from edge_mining.domain.miner.entities import Miner, MinerController
 from edge_mining.domain.miner.ports import MinerControllerRepository, MinerControlPort
@@ -38,15 +55,22 @@ from edge_mining.domain.notification.entities import Notifier
 from edge_mining.domain.notification.ports import NotificationPort, NotifierRepository
 from edge_mining.domain.performance.common import MiningPerformanceTrackerAdapter
 from edge_mining.domain.performance.entities import MiningPerformanceTracker
-from edge_mining.domain.performance.ports import MiningPerformanceTrackerPort, MiningPerformanceTrackerRepository
+from edge_mining.domain.performance.ports import (
+    MiningPerformanceTrackerPort,
+    MiningPerformanceTrackerRepository,
+)
 from edge_mining.domain.policy.services import RuleEngine
 from edge_mining.shared.external_services.common import ExternalServiceAdapter
 from edge_mining.shared.external_services.entities import ExternalService
-from edge_mining.shared.external_services.ports import ExternalServicePort, ExternalServiceRepository
+from edge_mining.shared.external_services.ports import (
+    ExternalServicePort,
+    ExternalServiceRepository,
+)
 from edge_mining.shared.interfaces.factories import (
     EnergyMonitorAdapterFactory,
     ExternalServiceFactory,
     ForecastAdapterFactory,
+    MinerControllerAdapterFactory,
 )
 from edge_mining.shared.logging.port import LoggerPort
 
@@ -249,7 +273,6 @@ class AdapterService(AdapterServiceInterface):
             return cached_instance
 
         # Retrieve the external service associated to the miner controller
-        external_service: Optional[ExternalServicePort] = None
         if miner_controller.external_service_id:
             external_service = self.get_external_service(miner_controller.external_service_id)
             if not external_service:
@@ -259,6 +282,7 @@ class AdapterService(AdapterServiceInterface):
                 )
 
         try:
+            miner_controller_factory: Optional[MinerControllerAdapterFactory] = None
             instance: Optional[MinerControlPort] = None
 
             if miner_controller.adapter_type == MinerControllerAdapter.DUMMY:
@@ -275,6 +299,17 @@ class AdapterService(AdapterServiceInterface):
             elif miner_controller.adapter_type == MinerControllerAdapter.GENERIC_SOCKET_HOME_ASSISTANT_API:
                 # --- Generic Socket Home Assistant API Controller ---
                 miner_controller_factory = GenericSocketHomeAssistantAPIMinerControllerAdapterFactory()
+
+                miner_controller_factory.from_miner(miner)
+
+                instance = miner_controller_factory.create(
+                    config=miner_controller.config,
+                    logger=self.logger,
+                    external_service=external_service,
+                )
+            elif miner_controller.adapter_type == MinerControllerAdapter.PYASIC:
+                # --- PyASIC Controller ---
+                miner_controller_factory = PyASICMinerControllerAdapterFactory()
 
                 miner_controller_factory.from_miner(miner)
 
@@ -329,7 +364,6 @@ class AdapterService(AdapterServiceInterface):
             return cached_instance
 
         # Retrieve the external service associated to the notifier
-        external_service: Optional[ExternalServicePort] = None
         if notifier.external_service_id:
             external_service = self.get_external_service(notifier.external_service_id)
             if not external_service:
