@@ -21,6 +21,7 @@ from edge_mining.adapters.domain.miner.controllers.dummy import DummyMinerContro
 from edge_mining.adapters.domain.miner.controllers.generic_socket_home_assistant_api import (
     GenericSocketHomeAssistantAPIMinerControllerAdapterFactory,
 )
+from edge_mining.adapters.domain.miner.controllers.pyasic import PyASICMinerControllerAdapterFactory
 from edge_mining.adapters.domain.notification.dummy import DummyNotifier
 from edge_mining.adapters.domain.notification.telegram import TelegramNotifierFactory
 from edge_mining.adapters.domain.performance.dummy import DummyMiningPerformanceTracker
@@ -69,6 +70,7 @@ from edge_mining.shared.interfaces.factories import (
     EnergyMonitorAdapterFactory,
     ExternalServiceFactory,
     ForecastAdapterFactory,
+    MinerControllerAdapterFactory,
 )
 from edge_mining.shared.logging.port import LoggerPort
 
@@ -280,6 +282,7 @@ class AdapterService(AdapterServiceInterface):
                 )
 
         try:
+            miner_controller_factory: Optional[MinerControllerAdapterFactory] = None
             instance: Optional[MinerControlPort] = None
 
             if miner_controller.adapter_type == MinerControllerAdapter.DUMMY:
@@ -296,6 +299,17 @@ class AdapterService(AdapterServiceInterface):
             elif miner_controller.adapter_type == MinerControllerAdapter.GENERIC_SOCKET_HOME_ASSISTANT_API:
                 # --- Generic Socket Home Assistant API Controller ---
                 miner_controller_factory = GenericSocketHomeAssistantAPIMinerControllerAdapterFactory()
+
+                miner_controller_factory.from_miner(miner)
+
+                instance = miner_controller_factory.create(
+                    config=miner_controller.config,
+                    logger=self.logger,
+                    external_service=external_service,
+                )
+            elif miner_controller.adapter_type == MinerControllerAdapter.PYASIC:
+                # --- PyASIC Controller ---
+                miner_controller_factory = PyASICMinerControllerAdapterFactory()
 
                 miner_controller_factory.from_miner(miner)
 
