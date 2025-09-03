@@ -2,6 +2,7 @@
 Collection of adapters configuration for the miner domain
 of the Edge Mining application.
 """
+
 import ipaddress
 from dataclasses import asdict, dataclass, field
 
@@ -66,6 +67,7 @@ class MinerControllerGenericSocketHomeAssistantAPIConfig(MinerControllerConfig):
         """Create a configuration object from a dictionary"""
         return cls(**data)
 
+
 @dataclass(frozen=True)
 class MinerControllerPyASICConfig(MinerControllerConfig):
     """
@@ -73,8 +75,7 @@ class MinerControllerPyASICConfig(MinerControllerConfig):
     to control a miner via pyasic.
     """
 
-    ip: str = field(default="switch.miner_socket")
-
+    ip: str = field(default="192.168.1.100")
 
     def is_valid(self, adapter_type: MinerControllerAdapter) -> bool:
         """
