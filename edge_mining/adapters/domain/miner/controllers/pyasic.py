@@ -2,10 +2,13 @@
 pyasic adapter (Implementation of Port)
 that controls a miner via pyasic.
 """
+
 import asyncio
 from typing import Dict, Optional
 
 import pyasic
+from pyasic import AnyMiner
+from pyasic.device.algorithm.hashrate import AlgoHashRate
 
 from edge_mining.domain.common import Watts
 from edge_mining.domain.miner.common import MinerStatus
@@ -42,9 +45,7 @@ class PyASICMinerControllerAdapterFactory(MinerControllerAdapterFactory):
         """Create a miner controller adapter instance."""
 
         if not isinstance(config, MinerControllerPyASICConfig):
-            raise MinerControllerConfigurationError(
-                "Invalid configuration for pyasic Miner Controller."
-            )
+            raise MinerControllerConfigurationError("Invalid configuration for pyasic Miner Controller.")
 
         # Get the config from the provided configuration
         miner_controller_configuration: MinerControllerPyASICConfig = config
@@ -67,21 +68,21 @@ class PyASICMinerController(MinerControlPort):
 
         self.ip = ip
 
-        self._miner = None
+        self._miner: Optional[AnyMiner] = None
 
         self._log_configuration()
 
+        # Retrieve the pyasic miner instance
+        self._get_miner()
+
     def _log_configuration(self):
         if self.logger:
-            self.logger.debug(
-                f"Entities Configured: IP={self.ip}"
-            )
+            self.logger.debug(f"Entities Configured: IP={self.ip}")
 
-    def _get_miner(self) -> Optional[pyasic.AnyMiner]:
+    def _get_miner(self) -> None:
+        """Retrieve the pyasic miner instance."""
         if self._miner is None:
             self._miner = asyncio.run(pyasic.get_miner(self.ip))
-        return self._miner
-
 
     def get_miner_hashrate(self) -> Optional[HashRate]:
         """
@@ -91,15 +92,20 @@ class PyASICMinerController(MinerControlPort):
         if self.logger:
             self.logger.debug(f"Fetching hashrate from from {self.ip}...")
 
-        hashrate = asyncio.run(self._get_miner().get_hashrate())
+        # Get pyasic miner instance
+        self._get_miner()
+
+        if not self._miner:
+            if self.logger:
+                self.logger.debug(f"Failed to retrieve miner instance from {self.ip}...")
+            return None
+
+        hashrate: Optional[AlgoHashRate] = asyncio.run(self._miner.get_hashrate())
         if hashrate is None:
             if self.logger:
                 self.logger.debug(f"Failed to fetch hashrate from {self.ip}...")
             return None
-        real_hashrate =  HashRate(
-            value=float(hashrate),
-            unit=str(hashrate.unit)
-        )
+        real_hashrate = HashRate(value=float(hashrate), unit=str(hashrate.unit))
 
         if self.logger:
             self.logger.debug(f"Hashrate fetched: {real_hashrate}")
@@ -111,12 +117,20 @@ class PyASICMinerController(MinerControlPort):
         if self.logger:
             self.logger.debug(f"Fetching power consumption from from {self.ip}...")
 
-        wattage = asyncio.run(self._get_miner().get_wattage())
+        # Get pyasic miner instance
+        self._get_miner()
+
+        if not self._miner:
+            if self.logger:
+                self.logger.debug(f"Failed to retrieve miner instance from {self.ip}...")
+            return None
+
+        wattage = asyncio.run(self._miner.get_wattage())
         if wattage is None:
             if self.logger:
                 self.logger.debug(f"Failed to fetch power consumption from {self.ip}...")
             return None
-        power_watts =  Watts(wattage)
+        power_watts = Watts(wattage)
 
         if self.logger:
             self.logger.debug(f"Power consumption fetched: {power_watts}")
@@ -128,7 +142,15 @@ class PyASICMinerController(MinerControlPort):
         if self.logger:
             self.logger.debug(f"Fetching miner status from {self.ip}...")
 
-        mining_state = asyncio.run(self._get_miner().is_mining())
+        # Get pyasic miner instance
+        self._get_miner()
+
+        if not self._miner:
+            if self.logger:
+                self.logger.debug(f"Failed to retrieve miner instance from {self.ip}...")
+            return MinerStatus.UNKNOWN
+
+        mining_state = asyncio.run(self._miner.is_mining())
 
         state_map: Dict[Optional[bool], MinerStatus] = {
             True: MinerStatus.ON,
@@ -148,21 +170,37 @@ class PyASICMinerController(MinerControlPort):
         if self.logger:
             self.logger.debug(f"Sending stop command to miner at {self.ip}...")
 
-        success = asyncio.run(self._get_miner().stop_mining())
+        # Get pyasic miner instance
+        self._get_miner()
+
+        if not self._miner:
+            if self.logger:
+                self.logger.debug(f"Failed to retrieve miner instance from {self.ip}...")
+            return False
+
+        success = asyncio.run(self._miner.stop_mining())
 
         if self.logger:
             self.logger.debug(f"Stop command sent. Success: {success}")
 
-        return success
+        return success or False
 
     def start_miner(self) -> bool:
         """Attempts to start the miner. Returns True on success request."""
         if self.logger:
             self.logger.debug(f"Sending start command to miner at {self.ip}...")
 
-        success = asyncio.run(self._get_miner().resume_mining())
+        # Get pyasic miner instance
+        self._get_miner()
+
+        if not self._miner:
+            if self.logger:
+                self.logger.debug(f"Failed to retrieve miner instance from {self.ip}...")
+            return False
+
+        success = asyncio.run(self._miner.resume_mining())
 
         if self.logger:
             self.logger.debug(f"Start command sent. Success: {success}")
 
-        return success
+        return success or False
