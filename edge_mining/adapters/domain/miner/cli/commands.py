@@ -18,6 +18,7 @@ from edge_mining.domain.miner.value_objects import HashRate
 from edge_mining.shared.adapter_configs.miner import (
     MinerControllerDummyConfig,
     MinerControllerGenericSocketHomeAssistantAPIConfig,
+    MinerControllerPyASICConfig,
 )
 from edge_mining.shared.adapter_maps.miner import MINER_CONTROLLER_TYPE_EXTERNAL_SERVICE_MAP
 from edge_mining.shared.external_services.entities import ExternalService
@@ -540,6 +541,20 @@ def handle_miner_controller_generic_socket_home_assistant_api_config(miner: Opti
     )
 
 
+def handle_miner_controller_pyasic_config(miner: Optional[Miner]) -> MinerControllerConfig:
+    """Handle configuration for the PyASIC Miner Controller."""
+    click.echo(click.style("\n--- PyASIC Miner Controller Configuration ---", fg="yellow"))
+
+    ip: str = click.prompt(
+        "IP address of the PyASIC miner (eg. 192.168.1.100)",
+        type=str,
+        default="192.168.1.100",
+    )
+    return MinerControllerPyASICConfig(
+        ip=ip,
+    )
+
+
 def handle_miner_controller_configuration(
     adapter_type: MinerControllerAdapter, miner: Optional[Miner]
 ) -> Optional[MinerControllerConfig]:
@@ -549,6 +564,8 @@ def handle_miner_controller_configuration(
         config = handle_miner_controller_dummy_config(miner)
     elif adapter_type.value == MinerControllerAdapter.GENERIC_SOCKET_HOME_ASSISTANT_API.value:
         config = handle_miner_controller_generic_socket_home_assistant_api_config(miner)
+    elif adapter_type.value == MinerControllerAdapter.PYASIC.value:
+        config = handle_miner_controller_pyasic_config(miner)
     else:
         click.echo(click.style("Unsupported controller type selected. Aborting.", fg="red"))
     return config
