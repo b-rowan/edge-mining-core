@@ -1393,7 +1393,6 @@ def update_single_energy_monitor(
         updated_monitor: EnergyMonitor = configuration_service.update_energy_monitor(
             monitor_id=new_energy_monitor.id,
             name=new_energy_monitor.name,
-            adapter_type=new_energy_monitor.adapter_type,
             config=new_energy_monitor.config,
             external_service_id=new_energy_monitor.external_service_id,
         )

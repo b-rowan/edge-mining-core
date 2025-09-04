@@ -594,7 +594,6 @@ class ConfigurationServiceInterface(ABC):
         self,
         monitor_id: EntityId,
         name: str,
-        adapter_type: EnergyMonitorAdapter,
         config: EnergyMonitorConfig,
         external_service_id: Optional[EntityId] = None,
     ) -> EnergyMonitor:

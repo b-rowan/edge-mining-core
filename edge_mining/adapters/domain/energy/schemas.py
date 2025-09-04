@@ -484,9 +484,6 @@ class EnergyMonitorUpdateSchema(BaseModel):
     """Schema for updating an existing energy monitor."""
 
     name: str = Field(default="", description="Energy monitor name")
-    adapter_type: EnergyMonitorAdapter = Field(
-        default=EnergyMonitorAdapter.DUMMY_SOLAR, description="Type of energy monitor adapter"
-    )
     config: Optional[dict] = Field(default=None, description="Energy monitor configuration")
     external_service_id: Optional[str] = Field(default=None, description="ID of external service")
 

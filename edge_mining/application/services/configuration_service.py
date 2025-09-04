@@ -494,7 +494,6 @@ class ConfigurationService(ConfigurationServiceInterface):
         self,
         monitor_id: EntityId,
         name: str,
-        adapter_type: EnergyMonitorAdapter,
         config: EnergyMonitorConfig,
         external_service_id: Optional[EntityId] = None,
     ) -> EnergyMonitor:
@@ -506,7 +505,6 @@ class ConfigurationService(ConfigurationServiceInterface):
             raise EnergyMonitorNotFoundError(f"Energy Monitor with ID {monitor_id} not found.")
 
         energy_monitor.name = name
-        energy_monitor.adapter_type = adapter_type
         energy_monitor.config = config
         energy_monitor.external_service_id = external_service_id
 
