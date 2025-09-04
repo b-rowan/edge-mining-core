@@ -10,7 +10,7 @@ from edge_mining.adapters.infrastructure.rule_engine.common import OperatorType
 from edge_mining.domain.common import EntityId
 from edge_mining.domain.policy.aggregate_roots import OptimizationPolicy
 from edge_mining.domain.policy.entities import AutomationRule
-from edge_mining.domain.policy.exceptions import PolicyError
+from edge_mining.domain.policy.exceptions import UnsupportedConditionError
 
 
 class RuleConditionSchema(BaseModel):
@@ -83,15 +83,6 @@ class LogicalGroupSchema(BaseModel):
             raise ValueError("Logical group must be a non-empty list")
         return v
 
-    @model_validator(mode="after")
-    def validate_single_operator(self) -> "LogicalGroupSchema":
-        """Ensure exactly one logical operator is specified."""
-        operators = [self.all_of, self.any_of, self.not_]
-        non_none_count = sum(1 for op in operators if op is not None)
-        if non_none_count != 1:
-            raise ValueError("Exactly one logical operator (all_of, any_of, not_) must be specified")
-        return self
-
     def to_model(self) -> dict:
         """Convert schema to dict for domain model."""
         return self.model_dump(exclude_none=True, exclude_unset=True)
@@ -130,6 +121,18 @@ class AutomationRuleSchema(BaseModel):
         if not v or not isinstance(v, str) or len(v.strip()) == 0:
             raise ValueError("Rule name must be a non-empty string")
         return v.strip()
+
+    @field_validator("conditions")
+    def validate_conditions(
+        cls, v: Union[LogicalGroupSchema, RuleConditionSchema]
+    ) -> Union[LogicalGroupSchema, RuleConditionSchema]:
+        """Ensure exactly one logical operator is specified."""
+        if isinstance(v, LogicalGroupSchema):
+            operators = [v.all_of, v.any_of, v.not_]
+            non_none_count = sum(1 for op in operators if op is not None)
+            if non_none_count != 1:
+                raise ValueError("Exactly one logical operator (all_of, any_of, not_) must be specified")
+        return v
 
     @field_serializer("id")
     def serialize_id(self, rule_id: str) -> str:
@@ -290,52 +293,6 @@ class OptimizationPolicySchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class OptimizationPolicyCreateSchema(BaseModel):
-    """Schema for creating a new optimization policy."""
-
-    name: str = Field(..., description="Policy name")
-    description: Optional[str] = Field(None, description="Policy description")
-    start_rules: List[AutomationRuleSchema] = Field(default_factory=list, description="Rules for starting mining")
-    stop_rules: List[AutomationRuleSchema] = Field(default_factory=list, description="Rules for stopping mining")
-
-    @field_validator("name")
-    @classmethod
-    def validate_name(cls, v: str) -> str:
-        """Validate policy name."""
-        if not v or not isinstance(v, str) or len(v.strip()) == 0:
-            raise ValueError("Policy name must be a non-empty string")
-        return v.strip()
-
-    def to_model(self) -> OptimizationPolicy:
-        """Convert schema to OptimizationPolicy domain aggregate root."""
-        return OptimizationPolicy(
-            id=EntityId(uuid.uuid4()),
-            name=self.name,
-            description=self.description,
-            start_rules=[rule.to_model() for rule in self.start_rules],
-            stop_rules=[rule.to_model() for rule in self.stop_rules],
-        )
-
-
-class OptimizationPolicyUpdateSchema(BaseModel):
-    """Schema for updating an existing optimization policy."""
-
-    name: Optional[str] = Field(None, description="Policy name")
-    description: Optional[str] = Field(None, description="Policy description")
-    start_rules: Optional[List[AutomationRuleSchema]] = Field(None, description="Rules for starting mining")
-    stop_rules: Optional[List[AutomationRuleSchema]] = Field(None, description="Rules for stopping mining")
-
-    @field_validator("name")
-    @classmethod
-    def validate_name(cls, v: Optional[str]) -> Optional[str]:
-        """Validate policy name."""
-        if v is not None:
-            if not isinstance(v, str) or len(v.strip()) == 0:
-                raise ValueError("Policy name must be a non-empty string")
-            return v.strip()
-        return v
-
-
 class AutomationRuleCreateSchema(BaseModel):
     """Schema for creating a new automation rule."""
 
@@ -375,6 +332,42 @@ class AutomationRuleCreateSchema(BaseModel):
         )
 
 
+class OptimizationPolicyCreateSchema(BaseModel):
+    """Schema for creating a new optimization policy."""
+
+    name: str = Field(..., description="Policy name")
+    description: Optional[str] = Field(None, description="Policy description")
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        """Validate policy name."""
+        if not v or not isinstance(v, str) or len(v.strip()) == 0:
+            raise ValueError("Policy name must be a non-empty string")
+        return v.strip()
+
+    def to_model(self) -> OptimizationPolicy:
+        """Convert schema to OptimizationPolicy domain aggregate root."""
+        return OptimizationPolicy(id=EntityId(uuid.uuid4()), name=self.name, description=self.description)
+
+
+class OptimizationPolicyUpdateSchema(BaseModel):
+    """Schema for updating an existing optimization policy."""
+
+    name: Optional[str] = Field(None, description="Policy name")
+    description: Optional[str] = Field(None, description="Policy description")
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: Optional[str]) -> Optional[str]:
+        """Validate policy name."""
+        if v is not None:
+            if not isinstance(v, str) or len(v.strip()) == 0:
+                raise ValueError("Policy name must be a non-empty string")
+            return v.strip()
+        return v
+
+
 class AutomationRuleUpdateSchema(BaseModel):
     """Schema for updating an existing automation rule."""
 
@@ -404,22 +397,26 @@ class AutomationRuleUpdateSchema(BaseModel):
 def convert_conditions_to_schema(conditions: dict) -> Union[LogicalGroupSchema, RuleConditionSchema]:
     """Recursively convert conditions dict to appropriate schema."""
     # Check if conditions are a logical group or a single rule condition
-    conditions_dict_keys = set(conditions.keys())
-    logical_group_keys = set(LogicalGroupSchema.model_fields.keys())
-    rule_condition_keys = set(RuleConditionSchema.model_fields.keys())
+    if isinstance(conditions, dict):
+        conditions_dict_keys = set(conditions.keys())
+        logical_group_keys = set(LogicalGroupSchema.model_fields.keys())
+        rule_condition_keys = set(RuleConditionSchema.model_fields.keys())
 
-    # Check if any key from conditions matches LogicalGroupSchema keys
-    if conditions_dict_keys.intersection(logical_group_keys):
-        # It's a logical group - create instance with only the matching fields
-        logical_group_data = {k: v for k, v in conditions.items() if k in logical_group_keys}
-        return LogicalGroupSchema(**logical_group_data)
-    elif conditions_dict_keys.intersection(rule_condition_keys):
-        # It's a single rule condition - create instance with only the matching fields
-        rule_condition_data = {k: v for k, v in conditions.items() if k in rule_condition_keys}
-        return RuleConditionSchema(**rule_condition_data)
+        # Check if any key from conditions matches LogicalGroupSchema keys
+        if conditions_dict_keys.intersection(logical_group_keys):
+            # It's a logical group - create instance with only the matching fields
+            logical_group_data = {k: v for k, v in conditions.items() if k in logical_group_keys and v is not None}
+            return LogicalGroupSchema(**logical_group_data)
+        elif conditions_dict_keys.intersection(rule_condition_keys):
+            # It's a single rule condition - create instance with only the matching fields
+            rule_condition_data = {k: v for k, v in conditions.items() if k in rule_condition_keys}
+            return RuleConditionSchema(**rule_condition_data)
+        else:
+            # It's an unknown format, raise an error
+            raise UnsupportedConditionError(f"Invalid conditions format: {conditions}")
     else:
-        # It's an unknown format, raise an error
-        raise PolicyError(f"Invalid conditions format: {conditions}")
+        # If conditions is not a dict, raise an error
+        raise UnsupportedConditionError(f"Expected conditions to be a dict, got {type(conditions)}")
 
 
 # Update forward references
