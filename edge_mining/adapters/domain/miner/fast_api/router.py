@@ -484,7 +484,7 @@ async def update_miner_controller(
             config_cls = config_service.get_miner_controller_config_by_type(controller.adapter_type)
             if config_cls is None:
                 raise MinerControllerConfigurationError(
-                    "No configuration class found for adapter typ {controller.adapter_type}"
+                    f"No configuration class found for adapter typ {controller.adapter_type}"
                 )
             configuration = config_cls.from_dict(controller_update.config)
 
