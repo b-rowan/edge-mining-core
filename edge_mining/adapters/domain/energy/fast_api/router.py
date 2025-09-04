@@ -304,7 +304,12 @@ async def update_energy_monitor(
 
         configuration: Optional[Configuration] = None
         if energy_monitor_update.config:
-            configuration = EnergyMonitorConfig.from_dict(energy_monitor_update.config)
+            config_cls = config_service.get_energy_monitor_config_by_type(energy_monitor_update.adapter_type)
+            if config_cls is None:
+                raise EnergyMonitorConfigurationError(
+                    f"No configuration class found for adapter type {energy_monitor_update.adapter_type}"
+                )
+            configuration = config_cls.from_dict(energy_monitor_update.config)
 
         # Update the energy monitor
         updated_monitor = config_service.update_energy_monitor(
