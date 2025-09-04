@@ -9,6 +9,7 @@ from edge_mining.adapters.domain.forecast.cli.commands import (
     print_forecast_provider_details,
     select_forecast_providers,
 )
+from edge_mining.adapters.infrastructure.cli.utils import print_configuration, process_filters
 from edge_mining.adapters.infrastructure.external_services.cli.commands import (
     handle_add_external_service,
     print_external_service_details,
@@ -21,10 +22,7 @@ from edge_mining.domain.energy.entities import EnergyMonitor, EnergySource
 from edge_mining.domain.energy.exceptions import EnergyMonitorNotFoundError
 from edge_mining.domain.energy.value_objects import Battery, Grid
 from edge_mining.domain.forecast.exceptions import ForecastProviderNotFoundError
-from edge_mining.shared.adapter_configs.energy import (
-    EnergyMonitorDummySolarConfig,
-    EnergyMonitorHomeAssistantConfig,
-)
+from edge_mining.shared.adapter_configs.energy import EnergyMonitorDummySolarConfig, EnergyMonitorHomeAssistantConfig
 from edge_mining.shared.adapter_maps.energy import (
     ENERGY_MONITOR_TYPE_EXTERNAL_SERVICE_MAP,
     ENERGY_SOURCE_TYPE_ENERGY_MONITOR_MAP,
@@ -33,11 +31,6 @@ from edge_mining.shared.adapter_maps.energy import (
 from edge_mining.shared.external_services.entities import ExternalService
 from edge_mining.shared.interfaces.config import EnergyMonitorConfig
 from edge_mining.shared.logging.port import LoggerPort
-
-from edge_mining.adapters.infrastructure.cli.utils import (
-    process_filters,
-    print_configuration,
-)
 
 
 def select_energy_source_type() -> Optional[EnergySourceType]:
