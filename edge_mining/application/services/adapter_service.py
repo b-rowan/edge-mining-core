@@ -271,6 +271,7 @@ class AdapterService(AdapterServiceInterface):
             return cached_instance
 
         # Retrieve the external service associated to the miner controller
+        external_service: Optional[ExternalServicePort] = None
         if miner_controller.external_service_id:
             external_service = self.get_external_service(miner_controller.external_service_id)
             if not external_service:
