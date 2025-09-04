@@ -481,12 +481,22 @@ async def update_miner_controller(
 
         configuration: Optional[Configuration] = None
         if controller_update.config:
-            configuration = MinerControllerConfig.from_dict(controller_update.config)
+            config_cls = config_service.get_miner_controller_config_by_type(controller.adapter_type)
+            if config_cls is None:
+                raise MinerControllerConfigurationError(
+                    f"No configuration class found for adapter typ {controller.adapter_type}"
+                )
+            configuration = config_cls.from_dict(controller_update.config)
+
+        external_service_id: Optional[EntityId] = None
+        if controller_update.external_service_id:
+            external_service_id = EntityId(uuid.UUID(controller_update.external_service_id))
 
         updated_controller = config_service.update_miner_controller(
             controller_id=controller.id,
             name=controller_update.name or "",
             config=cast(MinerControllerConfig, configuration),
+            external_service_id=external_service_id,
         )
 
         response = MinerControllerSchema.from_model(updated_controller)

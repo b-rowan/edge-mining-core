@@ -46,7 +46,13 @@ from edge_mining.domain.performance.ports import MiningPerformanceTrackerReposit
 from edge_mining.domain.policy.aggregate_roots import OptimizationPolicy
 from edge_mining.domain.policy.common import RuleType
 from edge_mining.domain.policy.entities import AutomationRule
-from edge_mining.domain.policy.exceptions import PolicyConfigurationError, PolicyError, PolicyNotFoundError
+from edge_mining.domain.policy.exceptions import (
+    PolicyAlreadyExistsError,
+    PolicyConfigurationError,
+    PolicyError,
+    PolicyNotFoundError,
+    RuleNotFoundError,
+)
 from edge_mining.domain.policy.ports import OptimizationPolicyRepository
 from edge_mining.domain.user.common import UserId
 from edge_mining.domain.user.entities import SystemSettings
@@ -488,19 +494,27 @@ class ConfigurationService(ConfigurationServiceInterface):
         self,
         monitor_id: EntityId,
         name: str,
-        adapter_type: EnergyMonitorAdapter,
         config: EnergyMonitorConfig,
         external_service_id: Optional[EntityId] = None,
     ) -> EnergyMonitor:
         """Update an energy monitor in the system."""
+        self.logger.info(f"Updating energy monitor {monitor_id} ({name})")
 
         energy_monitor = self.energy_monitor_repo.get_by_id(monitor_id)
 
         if not energy_monitor:
             raise EnergyMonitorNotFoundError(f"Energy Monitor with ID {monitor_id} not found.")
 
+        # Check if the config is valid for the current adapter type
+        config_type = ENERGY_MONITOR_CONFIG_TYPE_MAP[energy_monitor.adapter_type]
+        if config_type and not isinstance(config, config_type):
+            raise EnergyMonitorConfigurationError(
+                f"Invalid configuration type for energy monitor {monitor_id}. "
+                f"Expected {config_type}, "
+                f"got {type(config).__name__}."
+            )
+
         energy_monitor.name = name
-        energy_monitor.adapter_type = adapter_type
         energy_monitor.config = config
         energy_monitor.external_service_id = external_service_id
 
@@ -1299,7 +1313,11 @@ class ConfigurationService(ConfigurationServiceInterface):
         return controller
 
     def update_miner_controller(
-        self, controller_id: EntityId, name: str, config: MinerControllerConfig
+        self,
+        controller_id: EntityId,
+        name: str,
+        config: MinerControllerConfig,
+        external_service_id: Optional[EntityId] = None,
     ) -> MinerController:
         """
         Update a miner controller in the system.
@@ -1324,6 +1342,7 @@ class ConfigurationService(ConfigurationServiceInterface):
 
         controller.name = name
         controller.config = config
+        controller.external_service_id = external_service_id
 
         self.check_miner_controller(controller)
 
@@ -1480,6 +1499,11 @@ class ConfigurationService(ConfigurationServiceInterface):
 
         policy = OptimizationPolicy(name=name, description=description)
 
+        # Check if policy with the same id already exists
+        existing_policy = self.policy_repo.get_by_id(policy.id)
+        if existing_policy:
+            raise PolicyAlreadyExistsError(f"Policy with id '{policy.id}' already exists.")
+
         self.policy_repo.add(policy)
 
         return policy
@@ -1547,10 +1571,10 @@ class ConfigurationService(ConfigurationServiceInterface):
             raise PolicyError(f"Policy with ID {policy_id} not found.")
 
         for rule in policy.start_rules + policy.stop_rules:
-            if rule.id == rule_id:
+            if str(rule.id) == str(rule_id):
                 return rule
 
-        raise PolicyError(f"Rule with ID {rule_id} not found in policy {policy_id}.")
+        raise RuleNotFoundError(f"Rule with ID {rule_id} not found in policy {policy_id}.")
 
     def update_policy_rule(
         self,
@@ -1607,9 +1631,34 @@ class ConfigurationService(ConfigurationServiceInterface):
                 return rule
         raise PolicyError(f"Rule with ID {rule_id} not found in policy {policy_id}.")
 
-    def enable_policy_rule(self, policy_id: EntityId, rule_id: EntityId) -> None:
+    def enable_policy_rule(self, policy_id: EntityId, rule_id: EntityId) -> AutomationRule:
         """Set a rule as enabled."""
         self.logger.info(f"Setting rule {rule_id} of policy {policy_id} as active.")
+
+        policy = self.policy_repo.get_by_id(policy_id)
+
+        if not policy:
+            raise PolicyNotFoundError(f"Policy with ID {policy_id} not found.")
+
+        # Find the rule in the policy's start or stop rules
+        rule = None
+        for r in policy.start_rules + policy.stop_rules:
+            if str(r.id) == str(rule_id):
+                rule = r
+                break
+
+        if not rule:
+            raise RuleNotFoundError(f"Rule with ID {rule_id} not found in policy {policy_id}.")
+
+        # Set the rule as enabled
+        rule.enabled = True
+        self.policy_repo.update(policy)  # Persist change for each policy
+
+        return rule
+
+    def disable_policy_rule(self, policy_id: EntityId, rule_id: EntityId) -> AutomationRule:
+        """Set a rule as disabled."""
+        self.logger.info(f"Setting rule {rule_id} of policy {policy_id} as disabled.")
 
         policy = self.policy_repo.get_by_id(policy_id)
 
@@ -1619,16 +1668,18 @@ class ConfigurationService(ConfigurationServiceInterface):
         # Find the rule in the policy's start or stop rules
         rule = None
         for r in policy.start_rules + policy.stop_rules:
-            if r.id == rule_id:
+            if str(r.id) == str(rule_id):
                 rule = r
                 break
 
         if not rule:
-            raise PolicyError(f"Rule with ID {rule_id} not found in policy {policy_id}.")
+            raise RuleNotFoundError(f"Rule with ID {rule_id} not found in policy {policy_id}.")
 
-        # Set the rule as enabled
-        rule.enabled = True
+        # Set the rule as disabled
+        rule.enabled = False
         self.policy_repo.update(policy)  # Persist change for each policy
+
+        return rule
 
     def delete_policy(self, policy_id: EntityId) -> Optional[OptimizationPolicy]:
         """Delete a policy from the system."""
@@ -1652,7 +1703,7 @@ class ConfigurationService(ConfigurationServiceInterface):
         policy = self.policy_repo.get_by_id(policy_id)
 
         if not policy:
-            raise PolicyError(f"Policy with ID {policy_id} not found.")
+            raise PolicyNotFoundError(f"Policy with ID {policy_id} not found.")
 
         # Check if start rules contain at least one rule to stop the miner
         if not policy.start_rules or len(policy.start_rules) == 0:

@@ -22,10 +22,11 @@ from edge_mining.domain.notification.entities import Notifier
 from edge_mining.domain.notification.ports import NotificationPort
 from edge_mining.domain.optimization_unit.aggregate_roots import EnergyOptimizationUnit
 from edge_mining.domain.performance.ports import MiningPerformanceTrackerPort
-from edge_mining.domain.policy.aggregate_roots import AutomationRule, OptimizationPolicy
+from edge_mining.domain.policy.aggregate_roots import OptimizationPolicy
 from edge_mining.domain.policy.common import RuleType
+from edge_mining.domain.policy.entities import AutomationRule
 from edge_mining.domain.policy.services import RuleEngine
-from edge_mining.domain.policy.value_objects import Sun
+from edge_mining.domain.policy.value_objects import DecisionalContext, Sun
 from edge_mining.shared.external_services.common import ExternalServiceAdapter
 from edge_mining.shared.external_services.entities import ExternalService
 from edge_mining.shared.external_services.ports import ExternalServicePort
@@ -86,7 +87,7 @@ class AdapterServiceInterface(ABC):
 
     @abstractmethod
     def clear_all_adapters(self):
-        """Clear adapter chache"""
+        """Clear adapter cache"""
 
     @abstractmethod
     def remove_adapter(self, entity_id: EntityId):
@@ -94,11 +95,7 @@ class AdapterServiceInterface(ABC):
 
     @abstractmethod
     def clear_all_services(self):
-        """Clear external services chache"""
-
-    @abstractmethod
-    def remove_service(self, external_service_id: EntityId):
-        """Remove a specific external seervice from the cache."""
+        """Clear external services cache"""
 
 
 class OptimizationServiceInterface(ABC):
@@ -107,6 +104,14 @@ class OptimizationServiceInterface(ABC):
     @abstractmethod
     async def run_all_enabled_units(self):
         """Run the optimization process for all enabled units."""
+
+    @abstractmethod
+    def test_rules(self, rules: List[AutomationRule], context: DecisionalContext) -> bool:
+        """Test a specific automation rule against a given context."""
+
+    @abstractmethod
+    def get_decisional_context(self, optimization_unit_id: EntityId) -> Optional[DecisionalContext]:
+        """Get the decisional context for a specific optimization unit."""
 
 
 class MinerActionServiceInterface(ABC):
@@ -213,7 +218,11 @@ class ConfigurationServiceInterface(ABC):
 
     @abstractmethod
     def update_miner_controller(
-        self, controller_id: EntityId, name: str, config: MinerControllerConfig
+        self,
+        controller_id: EntityId,
+        name: str,
+        config: MinerControllerConfig,
+        external_service_id: Optional[EntityId] = None,
     ) -> MinerController:
         """
         Update a miner controller in the system.
@@ -322,6 +331,14 @@ class ConfigurationServiceInterface(ABC):
     @abstractmethod
     def delete_policy_rule(self, policy_id: EntityId, rule_id: EntityId) -> AutomationRule:
         """Delete a rule from a policy."""
+
+    @abstractmethod
+    def enable_policy_rule(self, policy_id: EntityId, rule_id: EntityId) -> AutomationRule:
+        """Set a rule as enabled."""
+
+    @abstractmethod
+    def disable_policy_rule(self, policy_id: EntityId, rule_id: EntityId) -> AutomationRule:
+        """Set a rule as disabled."""
 
     @abstractmethod
     def delete_policy(self, policy_id: EntityId) -> Optional[OptimizationPolicy]:
@@ -581,7 +598,6 @@ class ConfigurationServiceInterface(ABC):
         self,
         monitor_id: EntityId,
         name: str,
-        adapter_type: EnergyMonitorAdapter,
         config: EnergyMonitorConfig,
         external_service_id: Optional[EntityId] = None,
     ) -> EnergyMonitor:
