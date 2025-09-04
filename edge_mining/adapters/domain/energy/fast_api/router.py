@@ -311,12 +311,16 @@ async def update_energy_monitor(
                 )
             configuration = config_cls.from_dict(energy_monitor_update.config)
 
+        external_service_id: Optional[EntityId] = None
+        if energy_monitor_update.external_service_id:
+            external_service_id = EntityId(uuid.UUID(energy_monitor_update.external_service_id))
+
         # Update the energy monitor
         updated_monitor = config_service.update_energy_monitor(
             monitor_id=monitor_id,
             name=energy_monitor_update.name or "",
             config=cast(EnergyMonitorConfig, configuration),
-            external_service_id=EntityId(uuid.UUID(energy_monitor_update.external_service_id)),
+            external_service_id=external_service_id,
         )
 
         response = EnergyMonitorSchema.from_model(updated_monitor)
