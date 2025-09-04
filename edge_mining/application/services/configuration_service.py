@@ -1303,7 +1303,11 @@ class ConfigurationService(ConfigurationServiceInterface):
         return controller
 
     def update_miner_controller(
-        self, controller_id: EntityId, name: str, config: MinerControllerConfig
+        self,
+        controller_id: EntityId,
+        name: str,
+        config: MinerControllerConfig,
+        external_service_id: Optional[EntityId] = None,
     ) -> MinerController:
         """
         Update a miner controller in the system.
@@ -1328,6 +1332,7 @@ class ConfigurationService(ConfigurationServiceInterface):
 
         controller.name = name
         controller.config = config
+        controller.external_service_id = external_service_id
 
         self.check_miner_controller(controller)
 

@@ -488,10 +488,15 @@ async def update_miner_controller(
                 )
             configuration = config_cls.from_dict(controller_update.config)
 
+        external_service_id: Optional[EntityId] = None
+        if controller_update.external_service_id:
+            external_service_id = EntityId(uuid.UUID(controller_update.external_service_id))
+
         updated_controller = config_service.update_miner_controller(
             controller_id=controller.id,
             name=controller_update.name or "",
             config=cast(MinerControllerConfig, configuration),
+            external_service_id=external_service_id,
         )
 
         response = MinerControllerSchema.from_model(updated_controller)

@@ -218,7 +218,11 @@ class ConfigurationServiceInterface(ABC):
 
     @abstractmethod
     def update_miner_controller(
-        self, controller_id: EntityId, name: str, config: MinerControllerConfig
+        self,
+        controller_id: EntityId,
+        name: str,
+        config: MinerControllerConfig,
+        external_service_id: Optional[EntityId] = None,
     ) -> MinerController:
         """
         Update a miner controller in the system.
