@@ -504,6 +504,15 @@ class ConfigurationService(ConfigurationServiceInterface):
         if not energy_monitor:
             raise EnergyMonitorNotFoundError(f"Energy Monitor with ID {monitor_id} not found.")
 
+        # Check if the config is valid for the current adapter type
+        config_type = ENERGY_MONITOR_CONFIG_TYPE_MAP[energy_monitor.adapter_type]
+        if config_type and not isinstance(config, config_type):
+            raise EnergyMonitorConfigurationError(
+                f"Invalid configuration type for energy monitor {monitor_id}. "
+                f"Expected {config_type}, "
+                f"got {type(config).__name__}."
+            )
+
         energy_monitor.name = name
         energy_monitor.config = config
         energy_monitor.external_service_id = external_service_id
