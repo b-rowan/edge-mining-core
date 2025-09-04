@@ -687,6 +687,3 @@ class SunFactoryInterface(ABC):
     @abstractmethod
     def create_sun_for_date(self, for_date: datetime = datetime.now()) -> Sun:
         """Create a Sun object for a specific date."""
-        """Create a Sun object for a specific date."""
-        """Create a Sun object for a specific date."""
-        """Create a Sun object for a specific date."""
