@@ -32,9 +32,9 @@ The project uses **Hexagonal Architecture (Ports and Adapters)** to clearly sepa
     ```
 2.  **Create a virtual environment (recommended):**
     ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Linux/macOS
-    # venv\Scripts\activate    # On Windows
+    python -m venv .venv
+    source .venv/bin/activate  # On Linux/macOS
+    # .venv\Scripts\activate    # On Windows
     ```
 3.  **Install dependencies:**
     ```bash
