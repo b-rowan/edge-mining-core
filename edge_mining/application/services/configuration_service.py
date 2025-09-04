@@ -498,6 +498,7 @@ class ConfigurationService(ConfigurationServiceInterface):
         external_service_id: Optional[EntityId] = None,
     ) -> EnergyMonitor:
         """Update an energy monitor in the system."""
+        self.logger.info(f"Updating energy monitor {monitor_id} ({name})")
 
         energy_monitor = self.energy_monitor_repo.get_by_id(monitor_id)
 
