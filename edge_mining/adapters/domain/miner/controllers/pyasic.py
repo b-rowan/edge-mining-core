@@ -72,9 +72,6 @@ class PyASICMinerController(MinerControlPort):
 
         self._log_configuration()
 
-        # Retrieve the pyasic miner instance
-        self._get_miner()
-
     def _log_configuration(self):
         if self.logger:
             self.logger.debug(f"Entities Configured: IP={self.ip}")
