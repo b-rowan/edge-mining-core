@@ -4,18 +4,18 @@ This service is responsible for creating and managing adapters for the applicati
 
 from typing import Dict, List, Optional, Union
 
-from edge_mining.adapters.domain.energy.dummy_solar import DummySolarEnergyMonitorFactory
-from edge_mining.adapters.domain.energy.home_assistant_api import HomeAssistantAPIEnergyMonitorFactory
-from edge_mining.adapters.domain.forecast.dummy_solar import DummyForecastProviderFactory
-from edge_mining.adapters.domain.forecast.home_assistant_api import HomeAssistantForecastProviderFactory
-from edge_mining.adapters.domain.home_load.dummy import DummyHomeForecastProvider
+from edge_mining.adapters.domain.energy.monitors.dummy_solar import DummySolarEnergyMonitorFactory
+from edge_mining.adapters.domain.energy.monitors.home_assistant_api import HomeAssistantAPIEnergyMonitorFactory
+from edge_mining.adapters.domain.forecast.providers.dummy_solar import DummyForecastProviderFactory
+from edge_mining.adapters.domain.forecast.providers.home_assistant_api import HomeAssistantForecastProviderFactory
+from edge_mining.adapters.domain.home_load.providers.dummy import DummyHomeForecastProvider
 from edge_mining.adapters.domain.miner.controllers.dummy import DummyMinerController
 from edge_mining.adapters.domain.miner.controllers.generic_socket_home_assistant_api import (
     GenericSocketHomeAssistantAPIMinerControllerAdapterFactory,
 )
-from edge_mining.adapters.domain.notification.dummy import DummyNotifier
-from edge_mining.adapters.domain.notification.telegram import TelegramNotifierFactory
-from edge_mining.adapters.domain.performance.dummy import DummyMiningPerformanceTracker
+from edge_mining.adapters.domain.notification.notifiers.dummy import DummyNotifier
+from edge_mining.adapters.domain.notification.notifiers.telegram import TelegramNotifierFactory
+from edge_mining.adapters.domain.performance.trackers.dummy import DummyMiningPerformanceTracker
 from edge_mining.adapters.infrastructure.homeassistant.homeassistant_api import ServiceHomeAssistantAPIFactory
 from edge_mining.adapters.infrastructure.rule_engine.common import RuleEngineType
 from edge_mining.adapters.infrastructure.rule_engine.factory import RuleEngineFactory

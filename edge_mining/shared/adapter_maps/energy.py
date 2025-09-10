@@ -2,12 +2,12 @@
 
 from typing import Dict, List, Optional, Union
 
-from edge_mining.adapters.domain.energy.dummy_solar import DummySolarEnergyMonitor
-from edge_mining.adapters.domain.energy.home_assistant_api import (
+from edge_mining.adapters.domain.energy.monitors.dummy_solar import DummySolarEnergyMonitor
+from edge_mining.adapters.domain.energy.monitors.home_assistant_api import (
     HomeAssistantAPIEnergyMonitor,
 )
-from edge_mining.adapters.domain.forecast.dummy_solar import DummySolarForecastProvider
-from edge_mining.adapters.domain.forecast.home_assistant_api import (
+from edge_mining.adapters.domain.forecast.providers.dummy_solar import DummySolarForecastProvider
+from edge_mining.adapters.domain.forecast.providers.home_assistant_api import (
     HomeAssistantForecastProvider,
 )
 from edge_mining.domain.energy.common import EnergyMonitorAdapter, EnergySourceType
