@@ -1395,7 +1395,7 @@ class ConfigurationService(ConfigurationServiceInterface):
         self,
         name: str,
         adapter_type: NotificationAdapter,
-        config: NotificationConfig,
+        config: Optional[NotificationConfig],
         external_service_id: Optional[EntityId] = None,
     ) -> Notifier:
         """Add a new notifier."""
