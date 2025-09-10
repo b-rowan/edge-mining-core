@@ -56,6 +56,15 @@ class ExternalServiceSchema(BaseModel):
             v = ""
         return v
 
+    @field_validator("adapter_type")
+    @classmethod
+    def validate_adapter_type(cls, v: str) -> ExternalServiceAdapter:
+        """Validate that adapter_type is a recognized ExternalServiceAdapter."""
+        adapter_values = [adapter.value for adapter in ExternalServiceAdapter]
+        if v not in adapter_values:
+            raise ValueError(f"adapter_type must be one of {adapter_values}")
+        return ExternalServiceAdapter(v)
+
     @field_serializer("id")
     def serialize_id(self, id_value: EntityId) -> str:
         """Serialize EntityId to string."""
@@ -112,6 +121,15 @@ class ExternalServiceCreateSchema(BaseModel):
         if not v:
             v = ""
         return v
+
+    @field_validator("adapter_type")
+    @classmethod
+    def validate_adapter_type(cls, v: str) -> ExternalServiceAdapter:
+        """Validate that adapter_type is a recognized ExternalServiceAdapter."""
+        adapter_values = [adapter.value for adapter in ExternalServiceAdapter]
+        if v not in adapter_values:
+            raise ValueError(f"adapter_type must be one of {adapter_values}")
+        return ExternalServiceAdapter(v)
 
     def to_model(self) -> ExternalService:
         """Convert ExternalServiceCreateSchema to ExternalService domain entity."""
