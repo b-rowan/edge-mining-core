@@ -5,7 +5,7 @@ from typing import Dict, Optional, Union, cast
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
-from edge_mining.domain.common import EntityId, Watts
+from edge_mining.domain.common import EntityId, WattHours, Watts
 from edge_mining.domain.energy.common import EnergyMonitorAdapter, EnergySourceType
 from edge_mining.domain.energy.entities import EnergyMonitor, EnergySource
 from edge_mining.domain.energy.value_objects import Battery, Grid
@@ -28,8 +28,6 @@ class BatterySchema(BaseModel):
 
     def to_model(self) -> Battery:
         """Convert BatterySchema to Battery domain value object."""
-        from edge_mining.domain.common import WattHours
-
         return Battery(nominal_capacity=WattHours(self.nominal_capacity))
 
 
