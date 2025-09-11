@@ -18,6 +18,7 @@ from edge_mining.domain.common import EntityId
 # from edge_mining.domain.miner.entities import MinerController
 # from edge_mining.domain.notification.entities import Notifier
 from edge_mining.shared.adapter_configs.external_services import ExternalServiceHomeAssistantConfig
+from edge_mining.shared.adapter_maps.external_services import EXTERNAL_SERVICE_CONFIG_TYPE_MAP
 from edge_mining.shared.external_services.common import ExternalServiceAdapter
 from edge_mining.shared.external_services.entities import ExternalService
 
@@ -72,9 +73,12 @@ class ExternalServiceSchema(BaseModel):
 
     def to_model(self) -> ExternalService:
         """Convert ExternalServiceSchema to ExternalService domain entity."""
-        configuration: Optional[ExternalServiceConfig] = cast(
-            ExternalServiceConfig, ExternalServiceConfig.from_dict(self.config) if self.config else {}
-        )
+        configuration: Optional[ExternalServiceConfig] = None
+        if self.config:
+            config_class = EXTERNAL_SERVICE_CONFIG_TYPE_MAP.get(self.adapter_type, None)
+            if config_class:
+                configuration = cast(ExternalServiceConfig, config_class.from_dict(self.config))
+
         return ExternalService(
             id=EntityId(uuid.uuid4()),
             name=self.name,
@@ -133,9 +137,12 @@ class ExternalServiceCreateSchema(BaseModel):
 
     def to_model(self) -> ExternalService:
         """Convert ExternalServiceCreateSchema to ExternalService domain entity."""
-        configuration: Optional[ExternalServiceConfig] = cast(
-            ExternalServiceConfig, ExternalServiceConfig.from_dict(self.config) if self.config else {}
-        )
+        configuration: Optional[ExternalServiceConfig] = None
+        if self.config:
+            config_class = EXTERNAL_SERVICE_CONFIG_TYPE_MAP.get(self.adapter_type, None)
+            if config_class:
+                configuration = cast(ExternalServiceConfig, config_class.from_dict(self.config))
+
         return ExternalService(
             id=EntityId(uuid.uuid4()),
             name=self.name,
