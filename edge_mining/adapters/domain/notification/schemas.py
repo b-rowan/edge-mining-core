@@ -45,6 +45,15 @@ class NotifierSchema(BaseModel):
             v = ""
         return v
 
+    @field_validator("adapter_type")
+    @classmethod
+    def validate_adapter_type(cls, v: str) -> NotificationAdapter:
+        """Validate that adapter_type is a recognized NotificationAdapter."""
+        adapter_values = [adapter.value for adapter in NotificationAdapter]
+        if v not in adapter_values:
+            raise ValueError(f"adapter_type must be one of {adapter_values}")
+        return NotificationAdapter(v)
+
     @field_validator("external_service_id")
     @classmethod
     def validate_external_service_id(cls, v: Optional[str]) -> Optional[str]:
@@ -121,6 +130,15 @@ class NotifierCreateSchema(BaseModel):
         if not v:
             v = ""
         return v
+
+    @field_validator("adapter_type")
+    @classmethod
+    def validate_adapter_type(cls, v: str) -> NotificationAdapter:
+        """Validate that adapter_type is a recognized NotificationAdapter."""
+        adapter_values = [adapter.value for adapter in NotificationAdapter]
+        if v not in adapter_values:
+            raise ValueError(f"adapter_type must be one of {adapter_values}")
+        return NotificationAdapter(v)
 
     @field_validator("external_service_id")
     @classmethod
