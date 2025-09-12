@@ -12,6 +12,7 @@ from edge_mining.shared.adapter_configs.notification import (
     DummyNotificationConfig,
     TelegramNotificationConfig,
 )
+from edge_mining.shared.adapter_maps.notification import NOTIFIER_CONFIG_TYPE_MAP
 from edge_mining.shared.interfaces.config import NotificationConfig
 
 
@@ -88,9 +89,11 @@ class NotifierSchema(BaseModel):
 
     def to_model(self) -> Notifier:
         """Convert NotifierSchema to Notifier domain model instance."""
-        configuration: Optional[NotificationConfig] = cast(
-            NotificationConfig, NotificationConfig.from_dict(self.config) if self.config else None
-        )
+        configuration: Optional[NotificationConfig] = None
+        if self.config:
+            config_class = NOTIFIER_CONFIG_TYPE_MAP.get(self.adapter_type, None)
+            if config_class:
+                configuration = cast(NotificationConfig, config_class.from_dict(self.config))
 
         return Notifier(
             id=EntityId(uuid.UUID(self.id)),
@@ -153,9 +156,11 @@ class NotifierCreateSchema(BaseModel):
 
     def to_model(self) -> Notifier:
         """Convert NotifierCreateSchema to a Notifier domain model instance."""
-        configuration: Optional[NotificationConfig] = cast(
-            NotificationConfig, NotificationConfig.from_dict(self.config) if self.config else None
-        )
+        configuration: Optional[NotificationConfig] = None
+        if self.config:
+            config_class = NOTIFIER_CONFIG_TYPE_MAP.get(self.adapter_type, None)
+            if config_class:
+                configuration = cast(NotificationConfig, config_class.from_dict(self.config))
 
         return Notifier(
             id=EntityId(uuid.uuid4()),
