@@ -52,6 +52,7 @@ class PyASICMinerControllerAdapterFactory(MinerControllerAdapterFactory):
 
         return PyASICMinerController(
             ip=miner_controller_configuration.ip,
+            password=miner_controller_configuration.password,
             logger=logger,
         )
 
@@ -62,11 +63,13 @@ class PyASICMinerController(MinerControlPort):
     def __init__(
         self,
         ip: str,
+        password: str | None = None,
         logger: Optional[LoggerPort] = None,
     ):
         self.logger = logger
 
         self.ip = ip
+        self.password = password
 
         self._miner: Optional[AnyMiner] = None
 
@@ -82,7 +85,12 @@ class PyASICMinerController(MinerControlPort):
     def _get_miner(self) -> None:
         """Retrieve the pyasic miner instance."""
         if self._miner is None:
-            self._miner = asyncio.run(pyasic.get_miner(self.ip))
+            self._miner: AnyMiner = asyncio.run(pyasic.get_miner(self.ip))
+        if self._miner is not None and self.password is not None:
+            if self._miner.rpc is not None:
+                self._miner.rpc.pwd = self.password
+            if self._miner.web is not None:
+                self._miner.web.pwd = self.password
 
     def get_miner_hashrate(self) -> Optional[HashRate]:
         """

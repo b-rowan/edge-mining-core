@@ -76,6 +76,7 @@ class MinerControllerPyASICConfig(MinerControllerConfig):
     """
 
     ip: str = field(default="192.168.1.100")
+    password: str | None = None  # None represents "use the default"
 
     def is_valid(self, adapter_type: MinerControllerAdapter) -> bool:
         """
