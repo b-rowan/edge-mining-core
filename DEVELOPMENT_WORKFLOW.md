@@ -13,8 +13,43 @@ cd core
 
 ### 2. Setup development environment
 
+Create a Python virtual environment (if you have not created it yet, If the virtual environment is already created, skip to the next command).
+
+```bash
+python -m venv .venv
+```
+
+and activate it before running the make commands.
+
+#### On Linux/macOS:
+```bash
+source .venv/bin/activate
+```
+#### On Windows:
+```cmd
+.venv\Scripts\activate
+```
+
+Run the setup command to install the required dependencies.
+
+**NOTE**: Use the `make` command if you installed make on Windows or you are on WSL. Use `dev-tools.ps1` or `dev-tools.bat` if you are on Windows and prefer not to install additional software.
+For more details, see [DEV_TOOLS.md](DEV_TOOLS.md).
+
+#### On Linux/macOS:
 ```bash
 make setup
+```
+
+#### On Windows:
+PowerShell:
+```powershell
+.\dev-tools.ps1 setup
+```
+or
+
+Command Prompt (Batch):
+```cmd
+.\dev-tools.bat setup
 ```
 
 This command:
