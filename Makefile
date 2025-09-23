@@ -1,4 +1,4 @@
-# Makefile per Edge Mining Development Tools
+# Makefile for Edge Mining Development Tools
 
 # Variables
 PYTHON := .venv/bin/python
