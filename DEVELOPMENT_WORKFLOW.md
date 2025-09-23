@@ -54,10 +54,12 @@ Command Prompt (Batch):
 
 This command:
 
-- Installs development dependencies from `requirements-dev.txt`
-- Configures pre-commit hooks for automatic code quality checking
+- Installs development dependencies from `requirements-dev.txt`.
+- Configures pre-commit hooks for automatic code quality checking.
 
 ### 3. Verify everything works
+
+Run the following command to check code formatting, linting, and tests before starting development. This ensures your environment is set up correctly and all pre-commit checks pass.
 
 ```bash
 make pre-commit
@@ -79,11 +81,15 @@ make install-dev
 
 #### Automatic code formatting
 
+Run the following command to automatically format your code according to the project's style guidelines.
+
 ```bash
 make format
 ```
 
 #### Code quality check
+
+Use this command to check your code for linting issues and ensure it meets quality standards.
 
 ```bash
 make lint
@@ -91,19 +97,15 @@ make lint
 
 #### Running tests
 
+Execute this command to run all tests and verify your changes do not break existing functionality.
+
 ```bash
 make test
 ```
 
-#### Complete check before commit
-
-```bash
-make pre-commit
-```
-
 ### 3. Before committing
 
-Pre-commit hooks run automatically, but you can run them manually:
+Pre-commit hooks run automatically, but you can run them manually.
 
 ```bash
 make pre-commit
@@ -202,7 +204,6 @@ mypy edge_mining/
 ### Formatting conflicts
 
 ```bash
-# If black and flake8 are in conflict:
 make format
 make lint
 
