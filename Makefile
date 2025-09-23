@@ -1,9 +1,19 @@
 # Makefile for Edge Mining Development Tools
 
-# Variables
-PYTHON := .venv/bin/python
-PIP := .venv/bin/pip
-PRE_COMMIT := .venv/bin/pre-commit
+# Detect operating system
+ifeq ($(OS),Windows_NT)
+    # Windows
+    VENV_BIN := .venv\Scripts
+    PYTHON := $(VENV_BIN)\python.exe
+    PIP := $(VENV_BIN)\pip.exe
+    PRE_COMMIT := $(VENV_BIN)\pre-commit.exe
+else
+    # Unix-like (Linux, macOS)
+    VENV_BIN := .venv/bin
+    PYTHON := $(VENV_BIN)/python
+    PIP := $(VENV_BIN)/pip
+    PRE_COMMIT := $(VENV_BIN)/pre-commit
+endif
 
 # Default target
 help:
