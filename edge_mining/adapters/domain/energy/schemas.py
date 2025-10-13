@@ -82,6 +82,15 @@ class EnergySourceSchema(BaseModel):
             v = ""
         return v
 
+    @field_validator("type")
+    @classmethod
+    def validate_type(cls, v: str) -> EnergySourceType:
+        """Validate that type is a recognized EnergySourceType."""
+        adapter_values = [adapter.value for adapter in EnergySourceType]
+        if v not in adapter_values:
+            raise ValueError(f"adapter_type must be one of {adapter_values}")
+        return EnergySourceType(v)
+
     @field_validator("energy_monitor_id")
     @classmethod
     def validate_energy_monitor_id(cls, v: Optional[str]) -> Optional[str]:
@@ -204,6 +213,15 @@ class EnergySourceCreateSchema(BaseModel):
         if not v:
             v = ""
         return v
+
+    @field_validator("type")
+    @classmethod
+    def validate_type(cls, v: str) -> EnergySourceType:
+        """Validate that type is a recognized EnergySourceType."""
+        adapter_values = [adapter.value for adapter in EnergySourceType]
+        if v not in adapter_values:
+            raise ValueError(f"adapter_type must be one of {adapter_values}")
+        return EnergySourceType(v)
 
     @field_validator("energy_monitor_id")
     @classmethod
