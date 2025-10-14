@@ -1,6 +1,6 @@
 """CLI commands for the Miner domain."""
 
-from typing import List, Optional
+from typing import List, Optional, cast
 
 import click
 
@@ -493,43 +493,22 @@ def handle_miner_controller_dummy_config(
     click.echo(click.style("\n--- Dummy Miner Controller Configuration ---", fg="yellow"))
 
     # Try to get defaults from current_config, fallback to miner, then to hardcoded values
-    default_power = (
-        (current_config.get("power_max") if current_config and current_config.get("power_max") is not None else None)
-        or (
-            miner.power_consumption_max if miner and getattr(miner, "power_consumption_max", None) is not None else None
-        )
-        or 3200.0
-    )
-    default_hash_rate = (
-        (
-            current_config.get("hashrate_max", {}).get("value")
-            if current_config and current_config.get("hashrate_max", {})
-            else None
-        )
-        or (
-            miner.hash_rate_max.value
-            if miner
-            and getattr(miner, "hash_rate_max", None)
-            and getattr(miner.hash_rate_max, "value", None) is not None
-            else None
-        )
-        or 90.0
-    )
-    default_hash_rate_unit = (
-        (
-            current_config.get("hashrate_max", {}).get("unit")
-            if current_config and current_config.get("hashrate_max", {})
-            else None
-        )
-        or (
-            miner.hash_rate_max.unit
-            if miner
-            and getattr(miner, "hash_rate_max", None)
-            and getattr(miner.hash_rate_max, "unit", None) is not None
-            else None
-        )
-        or "TH/s"
-    )
+    if current_config and current_config.is_valid(MinerControllerAdapter.DUMMY):
+        config: MinerControllerDummyConfig = cast(MinerControllerDummyConfig, current_config)
+        # Check if hash_rate_max is a dict
+        if isinstance(config.hashrate_max, dict):
+            config = MinerControllerDummyConfig(
+                initial_status=config.initial_status,
+                power_max=config.power_max,
+                hashrate_max=HashRate(**config.hashrate_max),
+            )
+        default_power = config.power_max
+        default_hash_rate = config.hashrate_max.value
+        default_hash_rate_unit = config.hashrate_max.unit
+    else:
+        default_power = miner.power_consumption_max if miner else 3200.0
+        default_hash_rate = miner.hash_rate_max.value if miner and miner.hash_rate_max else 90.0
+        default_hash_rate_unit = miner.hash_rate_max.unit if miner and miner.hash_rate_max else "TH/s"
 
     power_max: float = click.prompt(
         "Max power consumption (Watt, eg. 3200.0)",
@@ -557,19 +536,17 @@ def handle_miner_controller_generic_socket_home_assistant_api_config(
     click.echo(click.style("\n--- Generic Socket Home Assistant API Miner Controller Configuration ---", fg="yellow"))
 
     # Try to get defaults from current_config, fallback to hardcoded values
-    default_entity_switch = (
-        current_config.get("entity_switch")
-        if current_config and current_config.get("entity_switch") is not None
-        else "switch.miner_socket"
-    )
-    default_entity_power = (
-        current_config.get("entity_power")
-        if current_config and current_config.get("entity_power") is not None
-        else "sensor.miner_power"
-    )
-    default_unit_power = (
-        current_config.get("unit_power") if current_config and current_config.get("unit_power") is not None else "W"
-    )
+    if current_config and current_config.is_valid(MinerControllerAdapter.GENERIC_SOCKET_HOME_ASSISTANT_API):
+        config: MinerControllerGenericSocketHomeAssistantAPIConfig = cast(
+            MinerControllerGenericSocketHomeAssistantAPIConfig, current_config
+        )
+        default_entity_switch = config.entity_switch
+        default_entity_power = config.entity_power
+        default_unit_power = config.unit_power
+    else:
+        default_entity_switch = "switch.miner_socket"
+        default_entity_power = "sensor.miner_power"
+        default_unit_power = "W"
 
     entity_switch: str = click.prompt(
         "Entity ID for the switch (eg. switch.miner_socket)",
@@ -603,9 +580,11 @@ def handle_miner_controller_configuration(
     config: Optional[MinerControllerConfig] = None
 
     if adapter_type.value == MinerControllerAdapter.DUMMY.value:
-        config = handle_miner_controller_dummy_config(miner, current_config=current_config)
+        config = handle_miner_controller_dummy_config(miner=miner, current_config=current_config)
     elif adapter_type.value == MinerControllerAdapter.GENERIC_SOCKET_HOME_ASSISTANT_API.value:
-        config = handle_miner_controller_generic_socket_home_assistant_api_config(miner, current_config=current_config)
+        config = handle_miner_controller_generic_socket_home_assistant_api_config(
+            miner=miner, current_config=current_config
+        )
     else:
         click.echo(click.style("Unsupported controller type selected. Aborting.", fg="red"))
     return config
@@ -632,7 +611,7 @@ def handle_add_miner_controller(
     new_controller.external_service_id = None
 
     config: Optional[MinerControllerConfig] = handle_miner_controller_configuration(
-        adapter_type=new_controller.adapter_type, miner=miner
+        adapter_type=new_controller.adapter_type, miner=miner, current_config=None
     )
 
     if config is None:
@@ -803,14 +782,14 @@ def update_single_miner_controller(
     name: str = click.prompt("New name of the controller", type=str, default=controller.name)
 
     # Get current config to pass as default
-    current_config: Optional[MinerControllerConfig] = getattr(controller, "config", None)
+    current_config: Optional[MinerControllerConfig] = controller.config
     # Get current external service id
-    external_service_id: Optional[EntityId] = getattr(controller, "external_service_id", None)
+    external_service_id: Optional[EntityId] = controller.external_service_id
 
     config: Optional[MinerControllerConfig] = handle_miner_controller_configuration(
         adapter_type=controller.adapter_type,
         miner=None,  # No miner needed for controller update
-        current_config=current_config.to_dict(),  # Current config values as default
+        current_config=current_config,  # Current config values as default
     )
 
     if config is None:
