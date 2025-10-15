@@ -492,23 +492,18 @@ def handle_miner_controller_dummy_config(
     """Handle configuration for the Dummy Miner Controller."""
     click.echo(click.style("\n--- Dummy Miner Controller Configuration ---", fg="yellow"))
 
-    # Try to get defaults from current_config, fallback to miner, then to hardcoded values
+    # Defaults from miner if available or hardcoded values
+    default_power = miner.power_consumption_max if miner else 3200.0
+    default_hash_rate = miner.hash_rate_max.value if miner and miner.hash_rate_max else 90.0
+    default_hash_rate_unit = miner.hash_rate_max.unit if miner and miner.hash_rate_max else "TH/s"
+
+    # Try to get defaults from current_config
     if current_config and current_config.is_valid(MinerControllerAdapter.DUMMY):
         config: MinerControllerDummyConfig = cast(MinerControllerDummyConfig, current_config)
-        # Check if hash_rate_max is a dict
-        if isinstance(config.hashrate_max, dict):
-            config = MinerControllerDummyConfig(
-                initial_status=config.initial_status,
-                power_max=config.power_max,
-                hashrate_max=HashRate(**config.hashrate_max),
-            )
+
         default_power = config.power_max
         default_hash_rate = config.hashrate_max.value
         default_hash_rate_unit = config.hashrate_max.unit
-    else:
-        default_power = miner.power_consumption_max if miner else 3200.0
-        default_hash_rate = miner.hash_rate_max.value if miner and miner.hash_rate_max else 90.0
-        default_hash_rate_unit = miner.hash_rate_max.unit if miner and miner.hash_rate_max else "TH/s"
 
     power_max: float = click.prompt(
         "Max power consumption (Watt, eg. 3200.0)",
@@ -535,7 +530,12 @@ def handle_miner_controller_generic_socket_home_assistant_api_config(
     """Handle configuration for the Generic Socket Home Assistant API Miner Controller."""
     click.echo(click.style("\n--- Generic Socket Home Assistant API Miner Controller Configuration ---", fg="yellow"))
 
-    # Try to get defaults from current_config, fallback to hardcoded values
+    # Default values from hardcoded values
+    default_entity_switch = "switch.miner_socket"
+    default_entity_power = "sensor.miner_power"
+    default_unit_power = "W"
+
+    # Try to get defaults from current_config
     if current_config and current_config.is_valid(MinerControllerAdapter.GENERIC_SOCKET_HOME_ASSISTANT_API):
         config: MinerControllerGenericSocketHomeAssistantAPIConfig = cast(
             MinerControllerGenericSocketHomeAssistantAPIConfig, current_config
@@ -543,10 +543,6 @@ def handle_miner_controller_generic_socket_home_assistant_api_config(
         default_entity_switch = config.entity_switch
         default_entity_power = config.entity_power
         default_unit_power = config.unit_power
-    else:
-        default_entity_switch = "switch.miner_socket"
-        default_entity_power = "sensor.miner_power"
-        default_unit_power = "W"
 
     entity_switch: str = click.prompt(
         "Entity ID for the switch (eg. switch.miner_socket)",
