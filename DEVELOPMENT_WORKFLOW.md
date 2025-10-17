@@ -32,7 +32,7 @@ source .venv/bin/activate
 
 Run the setup command to install the required dependencies.
 
-**NOTE**: Use the `make` command if you installed make on Windows or you are on WSL. Use `dev-tools.ps1` or `dev-tools.bat` if you are on Windows and prefer not to install additional software.
+**NOTE**: Use the `make` command if you are on Linux or you are on WSL. Use `dev-tools.ps1` or `dev-tools.bat` if you are on Windows.
 For more details, see [DEV_TOOLS.md](DEV_TOOLS.md).
 
 #### On Linux/macOS:

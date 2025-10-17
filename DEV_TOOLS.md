@@ -3,11 +3,11 @@
 This project uses various tools to maintain code quality and includes a Makefile for common development tasks. The Makefile is cross-platform compatible and works on both Windows and Linux/macOS.
 
 ### Prerequisites for Windows users:
-To use the Makefile on Windows, you need to install `make`. You have several options:
-- Install [chocolatey](https://chocolatey.org/) and run: `choco install make`
+To use the Makefile on Windows, you must run `make` via Windows Subsystem for Linux (WSL).
 - Install [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/install)
+- Run the `make` commands from a WSL shell (e.g., Ubuntu)
 
-**Alternative for Windows users:** If you prefer not to install make, you can use the provided scripts:
+**Alternative for Windows users:** If you prefer not to use WSL, you can use the provided alternative scripts:
 
 PowerShell:
 ```powershell
