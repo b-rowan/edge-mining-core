@@ -2,18 +2,25 @@
 
 # Detect operating system
 ifeq ($(OS),Windows_NT)
-    # Windows
-    VENV_BIN := .venv\Scripts
-    PYTHON := $(VENV_BIN)\python.exe
-    PIP := $(VENV_BIN)\pip.exe
-    PRE_COMMIT := $(VENV_BIN)\pre-commit.exe
+# On native Windows, instruct to use WSL or the provided scripts
+.PHONY: help setup install install-dev format lint lint-fix test test-cov pre-commit pre-commit-install clean
+help setup install install-dev format lint lint-fix test test-cov pre-commit pre-commit-install clean:
+	@echo "Windows environment detected."
+	@echo "This Makefile is intended to run under WSL (Linux) or on macOS/Linux."
+	@echo "Please either:"
+	@echo "  - Use WSL and run 'make <target>' from your Linux shell, or"
+	@echo "  - Use the Windows scripts: .\\dev-tools.ps1 or .\\dev-tools.bat"
+	@echo ""
+	@echo "Examples:"
+	@echo "  PowerShell: .\\dev-tools.ps1 help"
+	@echo "  CMD:        .\\dev-tools.bat help"
+	@exit
 else
-    # Unix-like (Linux, macOS)
-    VENV_BIN := .venv/bin
-    PYTHON := $(VENV_BIN)/python
-    PIP := $(VENV_BIN)/pip
-    PRE_COMMIT := $(VENV_BIN)/pre-commit
-endif
+	# Unix-like (Linux, macOS)
+	VENV_BIN := .venv/bin
+	PYTHON := $(VENV_BIN)/python
+	PIP := $(VENV_BIN)/pip
+	PRE_COMMIT := $(VENV_BIN)/pre-commit
 
 # Default target
 help:
@@ -99,3 +106,5 @@ clean:
 	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
 	rm -rf build/ dist/ .coverage htmlcov/ .pytest_cache/ 2>/dev/null || true
 	@echo "✅ Cleanup complete!"
+
+endif
