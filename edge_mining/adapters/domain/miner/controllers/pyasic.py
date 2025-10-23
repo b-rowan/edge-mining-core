@@ -3,13 +3,13 @@ pyasic adapter (Implementation of Port)
 that controls a miner via pyasic.
 """
 
-import asyncio
-from typing import Dict, Optional
+from typing import Dict, Optional, cast
 
 import pyasic
 from pyasic import AnyMiner
 from pyasic.device.algorithm.hashrate import AlgoHashRate
 
+from edge_mining.adapters.utils import run_async_func
 from edge_mining.domain.common import Watts
 from edge_mining.domain.miner.common import MinerStatus
 from edge_mining.domain.miner.entities import Miner
@@ -75,22 +75,26 @@ class PyASICMinerController(MinerControlPort):
 
         self._log_configuration()
 
-        # Retrieve the pyasic miner instance
-        self._get_miner()
-
     def _log_configuration(self):
         if self.logger:
             self.logger.debug(f"Entities Configured: IP={self.ip}")
 
     def _get_miner(self) -> None:
         """Retrieve the pyasic miner instance."""
-        if self._miner is None:
-            self._miner = asyncio.run(pyasic.get_miner(self.ip))
         if self._miner is not None and self.password is not None:
             if self._miner.rpc is not None:
                 self._miner.rpc.pwd = self.password
             if self._miner.web is not None:
                 self._miner.web.pwd = self.password
+            try:
+                miner = run_async_func(lambda: pyasic.get_miner(self.ip))
+                if miner is not None:
+                    self._miner = cast(AnyMiner, miner)
+                    if self.logger:
+                        self.logger.debug(f"Successfully retrieved miner instance from {self.ip}")
+            except Exception as e:
+                if self.logger:
+                    self.logger.error(f"Failed to retrieve miner instance from {self.ip}: {e}")
 
     def get_miner_hashrate(self) -> Optional[HashRate]:
         """
@@ -108,7 +112,8 @@ class PyASICMinerController(MinerControlPort):
                 self.logger.debug(f"Failed to retrieve miner instance from {self.ip}...")
             return None
 
-        hashrate: Optional[AlgoHashRate] = asyncio.run(self._miner.get_hashrate())
+        miner = self._miner
+        hashrate: Optional[AlgoHashRate] = run_async_func(lambda: miner.get_hashrate())
         if hashrate is None:
             if self.logger:
                 self.logger.debug(f"Failed to fetch hashrate from {self.ip}...")
@@ -133,7 +138,8 @@ class PyASICMinerController(MinerControlPort):
                 self.logger.debug(f"Failed to retrieve miner instance from {self.ip}...")
             return None
 
-        wattage = asyncio.run(self._miner.get_wattage())
+        miner = self._miner
+        wattage = run_async_func(lambda: miner.get_wattage())
         if wattage is None:
             if self.logger:
                 self.logger.debug(f"Failed to fetch power consumption from {self.ip}...")
@@ -158,7 +164,8 @@ class PyASICMinerController(MinerControlPort):
                 self.logger.debug(f"Failed to retrieve miner instance from {self.ip}...")
             return MinerStatus.UNKNOWN
 
-        mining_state = asyncio.run(self._miner.is_mining())
+        miner = self._miner
+        mining_state = run_async_func(lambda: miner.is_mining())
 
         state_map: Dict[Optional[bool], MinerStatus] = {
             True: MinerStatus.ON,
@@ -186,7 +193,8 @@ class PyASICMinerController(MinerControlPort):
                 self.logger.debug(f"Failed to retrieve miner instance from {self.ip}...")
             return False
 
-        success = asyncio.run(self._miner.stop_mining())
+        miner = self._miner
+        success = run_async_func(lambda: miner.stop_mining())
 
         if self.logger:
             self.logger.debug(f"Stop command sent. Success: {success}")
@@ -206,7 +214,8 @@ class PyASICMinerController(MinerControlPort):
                 self.logger.debug(f"Failed to retrieve miner instance from {self.ip}...")
             return False
 
-        success = asyncio.run(self._miner.resume_mining())
+        miner = self._miner
+        success = run_async_func(lambda: miner.resume_mining())
 
         if self.logger:
             self.logger.debug(f"Start command sent. Success: {success}")

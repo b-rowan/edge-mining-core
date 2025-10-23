@@ -571,7 +571,11 @@ class MinerControllerPyASICConfigSchema(BaseModel):
 
 MINER_CONTROLLER_CONFIG_SCHEMA_MAP: Dict[
     type[MinerControllerConfig],
-    Union[type[MinerControllerDummyConfigSchema], type[MinerControllerGenericSocketHomeAssistantAPIConfigSchema]],
+    Union[
+        type[MinerControllerDummyConfigSchema],
+        type[MinerControllerGenericSocketHomeAssistantAPIConfigSchema],
+        type[MinerControllerPyASICConfigSchema],
+    ],
 ] = {
     MinerControllerDummyConfig: MinerControllerDummyConfigSchema,
     MinerControllerGenericSocketHomeAssistantAPIConfig: MinerControllerGenericSocketHomeAssistantAPIConfigSchema,
