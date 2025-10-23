@@ -85,7 +85,7 @@ class PyASICMinerController(MinerControlPort):
     def _get_miner(self) -> None:
         """Retrieve the pyasic miner instance."""
         if self._miner is None:
-            self._miner: AnyMiner = asyncio.run(pyasic.get_miner(self.ip))
+            self._miner = asyncio.run(pyasic.get_miner(self.ip))
         if self._miner is not None and self.password is not None:
             if self._miner.rpc is not None:
                 self._miner.rpc.pwd = self.password
