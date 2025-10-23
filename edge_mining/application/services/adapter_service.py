@@ -642,7 +642,7 @@ class AdapterService(AdapterServiceInterface):
 
     def get_notifiers(self, notifier_ids: List[EntityId]) -> List[NotificationPort]:
         """Get a list of specific notifier adapter instances by IDs."""
-        notifier_instances = List[NotificationPort]()
+        notifier_instances: List[NotificationPort] = []
         for notifier_id in notifier_ids:
             notifier = self.notifier_repo.get_by_id(notifier_id)
             if not notifier:
