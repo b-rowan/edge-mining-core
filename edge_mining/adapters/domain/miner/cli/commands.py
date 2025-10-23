@@ -569,20 +569,36 @@ def handle_miner_controller_generic_socket_home_assistant_api_config(
 
 
 def handle_miner_controller_pyasic_config(
-    miner: Optional[Miner],
-    current_config: Optional[MinerControllerConfig] = None
+    miner: Optional[Miner], current_config: Optional[MinerControllerConfig] = None
 ) -> MinerControllerConfig:
     """Handle configuration for the PyASIC Miner Controller."""
     click.echo(click.style("\n--- PyASIC Miner Controller Configuration ---", fg="yellow"))
 
+    # Default values from hardcoded values
+    default_ip = "192.168.1.100"
+    default_password: Optional[str] = None  # None represents "use the default miner password"
+
+    # Try to get defaults from current_config
+    if current_config and current_config.is_valid(MinerControllerAdapter.PYASIC):
+        config: MinerControllerPyASICConfig = cast(MinerControllerPyASICConfig, current_config)
+        default_ip = config.ip
+        default_password = config.password
+
     ip: str = click.prompt(
         "IP address of the PyASIC miner (eg. 192.168.1.100)",
         type=str,
-        default="192.168.1.100",
+        default=default_ip,
     )
-    return MinerControllerPyASICConfig(
-        ip=ip,
+
+    password: Optional[str] = click.prompt(
+        "Password of the PyASIC miner (empty represents 'use the default miner password')",
+        type=str,
+        default=default_password,
     )
+    if password == "":
+        password = None
+
+    return MinerControllerPyASICConfig(ip=ip, password=password)
 
 
 def handle_miner_controller_configuration(

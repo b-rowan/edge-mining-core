@@ -529,6 +529,9 @@ class MinerControllerPyASICConfigSchema(BaseModel):
     """Schema for MinerControllerPyASICConfig."""
 
     ip: str = Field(..., description="IP address of the PyASIC miner")
+    password: str = Field(
+        ..., description="Password of the PyASIC miner (empty represents 'use the default miner password')"
+    )
 
     @field_validator("ip")
     @classmethod
@@ -541,6 +544,15 @@ class MinerControllerPyASICConfigSchema(BaseModel):
             ipaddress.ip_address(str(v))
         except ValueError as e:
             raise ValueError(f"Invalid IP address: {v}") from e
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        """Validate that the value is a plausible password."""
+        v = v.strip()
+        if not v:
+            v = None
         return v
 
     def to_model(self) -> MinerControllerPyASICConfig:
