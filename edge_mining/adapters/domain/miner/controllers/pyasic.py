@@ -137,7 +137,7 @@ class PyASICMinerController(MinerControlPort):
 
         if not self._miner:
             if self.logger:
-                self.logger.debug(f"Failed to retrieve miner instance from {self.ip}...")
+                self.logger.error(f"Failed to retrieve miner instance from {self.ip}...")
             return None
 
         miner = self._miner
@@ -163,7 +163,7 @@ class PyASICMinerController(MinerControlPort):
 
         if not self._miner:
             if self.logger:
-                self.logger.debug(f"Failed to retrieve miner instance from {self.ip}...")
+                self.logger.error(f"Failed to retrieve miner instance from {self.ip}...")
             return None
 
         miner = self._miner
@@ -189,7 +189,7 @@ class PyASICMinerController(MinerControlPort):
 
         if not self._miner:
             if self.logger:
-                self.logger.debug(f"Failed to retrieve miner instance from {self.ip}...")
+                self.logger.error(f"Failed to retrieve miner instance from {self.ip}...")
             return MinerStatus.UNKNOWN
 
         miner = self._miner
@@ -218,7 +218,7 @@ class PyASICMinerController(MinerControlPort):
 
         if not self._miner:
             if self.logger:
-                self.logger.debug(f"Failed to retrieve miner instance from {self.ip}...")
+                self.logger.error(f"Failed to retrieve miner instance from {self.ip}...")
             return False
 
         miner = self._miner
@@ -239,7 +239,7 @@ class PyASICMinerController(MinerControlPort):
 
         if not self._miner:
             if self.logger:
-                self.logger.debug(f"Failed to retrieve miner instance from {self.ip}...")
+                self.logger.error(f"Failed to retrieve miner instance from {self.ip}...")
             return False
 
         miner = self._miner
