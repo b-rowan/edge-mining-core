@@ -3,10 +3,12 @@ Collection of adapters configuration for the miner domain
 of the Edge Mining application.
 """
 
+from enum import Enum
 import ipaddress
 from dataclasses import asdict, dataclass, field
+from typing import Optional
 
-from edge_mining.domain.miner.common import MinerControllerAdapter
+from edge_mining.domain.miner.common import MinerControllerAdapter, MinerControllerProtocol
 from edge_mining.domain.miner.value_objects import HashRate
 from edge_mining.shared.interfaces.config import MinerControllerConfig
 
@@ -87,7 +89,10 @@ class MinerControllerPyASICConfig(MinerControllerConfig):
     """
 
     ip: str = field(default="192.168.1.100")
-    password: str | None = None  # None represents "use the default"
+    port: Optional[int] = field(default=None)  # None represents "use the default"
+    username: Optional[str] = field(default=None)  # None represents "use the default"
+    password: Optional[str] = field(default=None)  # None represents "use the default"
+    protocol: MinerControllerProtocol = field(default=MinerControllerProtocol.WEB)
 
     def is_valid(self, adapter_type: MinerControllerAdapter) -> bool:
         """
@@ -103,9 +108,27 @@ class MinerControllerPyASICConfig(MinerControllerConfig):
 
     def to_dict(self) -> dict:
         """Converts the configuration object into a serializable dictionary"""
-        return {**asdict(self)}
+        result = asdict(self)
+
+        # Convert all enum values to their string representation
+        for key, value in result.items():
+            if isinstance(value, Enum):
+                result[key] = value.value
+
+        return result
 
     @classmethod
     def from_dict(cls, data: dict):
         """Create a configuration object from a dictionary"""
-        return cls(**data)
+        protocol = MinerControllerProtocol.WEB
+        if "protocol" in data:
+            protocol_value = data.get("protocol")
+            protocol = MinerControllerProtocol(protocol_value)
+
+        return MinerControllerPyASICConfig(
+            ip=data.get("ip", "192.168.1.100"),
+            port=data.get("port", None),
+            username=data.get("username", None),
+            password=data.get("password", None),
+            protocol=protocol,
+        )
