@@ -94,7 +94,7 @@ class PyASICMinerController(MinerControlPort):
         """Retrieve the pyasic miner instance."""
         if self._miner is None:
             try:
-                miner = run_async_func(lambda: pyasic.get_miner(self.ip))
+                miner = run_async_func(pyasic.get_miner(self.ip))
                 if miner is not None:
                     self._miner = cast(AnyMiner, miner)
 
@@ -141,7 +141,7 @@ class PyASICMinerController(MinerControlPort):
             return None
 
         miner = self._miner
-        hashrate: Optional[AlgoHashRate] = run_async_func(lambda: miner.get_hashrate())
+        hashrate: Optional[AlgoHashRate] = run_async_func(miner.get_hashrate())
         if hashrate is None:
             if self.logger:
                 self.logger.debug(f"Failed to fetch hashrate from {self.ip}...")
@@ -167,7 +167,7 @@ class PyASICMinerController(MinerControlPort):
             return None
 
         miner = self._miner
-        wattage = run_async_func(lambda: miner.get_wattage())
+        wattage = run_async_func(miner.get_wattage())
         if wattage is None:
             if self.logger:
                 self.logger.debug(f"Failed to fetch power consumption from {self.ip}...")
@@ -193,7 +193,7 @@ class PyASICMinerController(MinerControlPort):
             return MinerStatus.UNKNOWN
 
         miner = self._miner
-        mining_state = run_async_func(lambda: miner.is_mining())
+        mining_state = run_async_func(miner.is_mining())
 
         state_map: Dict[Optional[bool], MinerStatus] = {
             True: MinerStatus.ON,
@@ -222,7 +222,7 @@ class PyASICMinerController(MinerControlPort):
             return False
 
         miner = self._miner
-        success = run_async_func(lambda: miner.stop_mining())
+        success = run_async_func(miner.stop_mining())
 
         if self.logger:
             self.logger.debug(f"Stop command sent. Success: {success}")
@@ -243,7 +243,7 @@ class PyASICMinerController(MinerControlPort):
             return False
 
         miner = self._miner
-        success = run_async_func(lambda: miner.resume_mining())
+        success = run_async_func(miner.resume_mining())
 
         if self.logger:
             self.logger.debug(f"Start command sent. Success: {success}")
