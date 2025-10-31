@@ -106,7 +106,8 @@ class PyASICMinerController(MinerControlPort):
                             if self.password:
                                 self._miner.rpc.pwd = self.password
                         else:
-                            self.logger.error("Unknown RPC Protocol")
+                            if self.logger:
+                                self.logger.error("Unknown RPC Protocol")
                     elif self.protocol == MinerControllerProtocol.WEB:
                         if isinstance(self._miner.web, BaseWebAPI):
                             if self.port:
@@ -116,7 +117,8 @@ class PyASICMinerController(MinerControlPort):
                             if self.username:
                                 self._miner.web.username = self.username
                         else:
-                            self.logger.error("Unknown Web Protocol")
+                            if self.logger:
+                                self.logger.error("Unknown Web Protocol")
 
                     if self.logger:
                         self.logger.debug(f"Successfully retrieved miner instance from {self.ip}")
