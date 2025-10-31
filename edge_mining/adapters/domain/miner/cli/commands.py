@@ -12,7 +12,7 @@ from edge_mining.adapters.infrastructure.external_services.cli.commands import (
 )
 from edge_mining.application.interfaces import ConfigurationServiceInterface
 from edge_mining.domain.common import EntityId, Watts
-from edge_mining.domain.miner.common import MinerControllerAdapter, MinerStatus
+from edge_mining.domain.miner.common import MinerControllerAdapter, MinerControllerProtocol, MinerStatus
 from edge_mining.domain.miner.entities import Miner, MinerController
 from edge_mining.domain.miner.value_objects import HashRate
 from edge_mining.shared.adapter_configs.miner import (
@@ -576,13 +576,19 @@ def handle_miner_controller_pyasic_config(
 
     # Default values from hardcoded values
     default_ip = "192.168.1.100"
-    default_password: Optional[str] = None  # None represents "use the default miner password"
+    default_port: Optional[int] = None
+    default_username: Optional[str] = None
+    default_password: Optional[str] = None
+    default_protocol: MinerControllerProtocol = MinerControllerProtocol.WEB
 
     # Try to get defaults from current_config
     if current_config and current_config.is_valid(MinerControllerAdapter.PYASIC):
         config: MinerControllerPyASICConfig = cast(MinerControllerPyASICConfig, current_config)
-        default_ip = config.ip
-        default_password = config.password
+        default_ip = config.ip or default_ip
+        default_port = config.port or default_port
+        default_username = config.username or default_username
+        default_password = config.password or default_password
+        default_protocol = config.protocol or default_protocol
 
     ip: str = click.prompt(
         "IP address of the PyASIC miner (eg. 192.168.1.100)",
@@ -590,15 +596,37 @@ def handle_miner_controller_pyasic_config(
         default=default_ip,
     )
 
-    password: Optional[str] = click.prompt(
+    protocol: MinerControllerProtocol = click.prompt(
+        "Protocol to use to connect to the PyASIC miner",
+        type=click.Choice([p.value for p in MinerControllerProtocol]),
+        default=default_protocol.value,
+    )
+    protocol = MinerControllerProtocol(protocol)
+
+    port_input = click.prompt(
+        "Port of the PyASIC miner (eg. 80, press Enter for default)",
+        type=str,
+        default="",
+    )
+    port: Optional[int] = None if port_input == "" else int(port_input)
+
+    username_input = click.prompt(
+        "Username of the PyASIC miner (eg. root, press Enter for default)",
+        type=str,
+        default="",
+    )
+    username: Optional[str] = username_input if username_input != "" else default_username
+
+    password_input = click.prompt(
         "Password of the PyASIC miner (empty represents 'use the default miner password')",
         type=str,
-        default=default_password,
+        default="",
     )
+    password: Optional[str] = password_input if password_input != "" else default_password
     if password == "":
         password = None
 
-    return MinerControllerPyASICConfig(ip=ip, password=password)
+    return MinerControllerPyASICConfig(ip=ip, port=port, username=username, password=password, protocol=protocol)
 
 
 def handle_miner_controller_configuration(
