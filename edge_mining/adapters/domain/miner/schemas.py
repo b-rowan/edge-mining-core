@@ -101,16 +101,20 @@ class MinerSchema(BaseModel):
     @classmethod
     def from_model(cls, miner: Miner) -> "MinerSchema":
         """Create MinerSchema from a Miner domain model instance."""
+        hash_rate: Optional[HashRateSchema] = None
+        if miner.hash_rate:
+            hash_rate = HashRateSchema(value=miner.hash_rate.value, unit=miner.hash_rate.unit)
+
+        hash_rate_max: Optional[HashRateSchema] = None
+        if miner.hash_rate_max:
+            hash_rate_max = HashRateSchema(value=miner.hash_rate_max.value, unit=miner.hash_rate_max.unit)
+
         return cls(
             id=str(miner.id),
             name=miner.name,
             status=miner.status,
-            hash_rate=HashRateSchema(value=miner.hash_rate.value, unit=miner.hash_rate.unit)
-            if miner.hash_rate
-            else None,
-            hash_rate_max=HashRateSchema(value=miner.hash_rate_max.value, unit=miner.hash_rate_max.unit)
-            if miner.hash_rate_max
-            else None,
+            hash_rate=hash_rate,
+            hash_rate_max=hash_rate_max,
             power_consumption=miner.power_consumption,
             power_consumption_max=miner.power_consumption_max,
             active=miner.active,
