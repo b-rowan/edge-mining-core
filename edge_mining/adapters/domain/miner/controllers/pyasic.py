@@ -11,7 +11,7 @@ from pyasic.device.algorithm.hashrate import AlgoHashRate
 
 from edge_mining.adapters.utils import run_async_func
 from edge_mining.domain.common import Watts
-from edge_mining.domain.miner.common import MinerStatus
+from edge_mining.domain.miner.common import MinerControllerProtocol, MinerStatus
 from edge_mining.domain.miner.entities import Miner
 from edge_mining.domain.miner.exceptions import MinerControllerConfigurationError
 from edge_mining.domain.miner.ports import MinerControlPort
@@ -52,6 +52,9 @@ class PyASICMinerControllerAdapterFactory(MinerControllerAdapterFactory):
 
         return PyASICMinerController(
             ip=miner_controller_configuration.ip,
+            protocol=miner_controller_configuration.protocol,
+            port=miner_controller_configuration.port,
+            username=miner_controller_configuration.username,
             password=miner_controller_configuration.password,
             logger=logger,
         )
@@ -63,13 +66,19 @@ class PyASICMinerController(MinerControlPort):
     def __init__(
         self,
         ip: str,
-        password: str | None = None,
+        port: Optional[int] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        protocol: Optional[MinerControllerProtocol] = None,
         logger: Optional[LoggerPort] = None,
     ):
         self.logger = logger
 
         self.ip = ip
         self.password = password
+        self.port = port
+        self.username = username
+        self.protocol = protocol
 
         self._miner: Optional[AnyMiner] = None
 
