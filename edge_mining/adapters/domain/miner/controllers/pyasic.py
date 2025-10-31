@@ -8,6 +8,8 @@ from typing import Dict, Optional, cast
 import pyasic
 from pyasic import AnyMiner
 from pyasic.device.algorithm.hashrate import AlgoHashRate
+from pyasic.rpc.cgminer import BaseMinerRPCAPI
+from pyasic.web.base import BaseWebAPI
 
 from edge_mining.adapters.utils import run_async_func
 from edge_mining.domain.common import Watts
@@ -90,15 +92,32 @@ class PyASICMinerController(MinerControlPort):
 
     def _get_miner(self) -> None:
         """Retrieve the pyasic miner instance."""
-        if self._miner is not None and self.password is not None:
-            if self._miner.rpc is not None:
-                self._miner.rpc.pwd = self.password
-            if self._miner.web is not None:
-                self._miner.web.pwd = self.password
+        if self._miner is None:
             try:
                 miner = run_async_func(lambda: pyasic.get_miner(self.ip))
                 if miner is not None:
                     self._miner = cast(AnyMiner, miner)
+
+                    # Set additional parameters like protocol, password,port
+                    if self.protocol == MinerControllerProtocol.RPC:
+                        if isinstance(self._miner.rpc, BaseMinerRPCAPI):
+                            if self.port:
+                                self._miner.rpc.port = self.port
+                            if self.password:
+                                self._miner.rpc.pwd = self.password
+                        else:
+                            self.logger.error("Unknown RPC Protocol")
+                    elif self.protocol == MinerControllerProtocol.WEB:
+                        if isinstance(self._miner.web, BaseWebAPI):
+                            if self.port:
+                                self._miner.web.port = self.port
+                            if self.password:
+                                self._miner.web.pwd = self.password
+                            if self.username:
+                                self._miner.web.username = self.username
+                        else:
+                            self.logger.error("Unknown Web Protocol")
+
                     if self.logger:
                         self.logger.debug(f"Successfully retrieved miner instance from {self.ip}")
             except Exception as e:
