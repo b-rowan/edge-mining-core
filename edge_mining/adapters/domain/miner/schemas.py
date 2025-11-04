@@ -7,7 +7,7 @@ from typing import Dict, Optional, Union, cast
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from edge_mining.domain.common import EntityId, Watts
-from edge_mining.domain.miner.common import MinerControllerAdapter, MinerStatus
+from edge_mining.domain.miner.common import MinerControllerAdapter, MinerControllerProtocol, MinerStatus
 from edge_mining.domain.miner.entities import Miner, MinerController
 from edge_mining.domain.miner.value_objects import HashRate
 from edge_mining.shared.adapter_configs.miner import (
@@ -533,8 +533,17 @@ class MinerControllerPyASICConfigSchema(BaseModel):
     """Schema for MinerControllerPyASICConfig."""
 
     ip: str = Field(..., description="IP address of the PyASIC miner")
-    password: str = Field(
-        ..., description="Password of the PyASIC miner (empty represents 'use the default miner password')"
+    port: Optional[int] = Field(
+        None, description="Port of the PyASIC miner (empty represents 'use the default miner port')"
+    )
+    username: Optional[str] = Field(
+        None, description="Username of the PyASIC miner (empty represents 'use the default miner username')"
+    )
+    password: Optional[str] = Field(
+        None, description="Password of the PyASIC miner (empty represents 'use the default miner password')"
+    )
+    protocol: MinerControllerProtocol = Field(
+        default=MinerControllerProtocol.WEB, description="Protocol to use for connecting to the miner"
     )
 
     @field_validator("ip")
@@ -550,6 +559,24 @@ class MinerControllerPyASICConfigSchema(BaseModel):
             raise ValueError(f"Invalid IP address: {v}") from e
         return v
 
+    @field_validator("port")
+    @classmethod
+    def validate_port(cls, v: Optional[int]) -> Optional[int]:
+        """Validate that the value is a plausible port number."""
+        if v is not None:
+            if not (0 < v < 65536):
+                raise ValueError("Port must be between 1 and 65535")
+        return v
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: str) -> str:
+        """Validate that the value is a plausible username."""
+        v = v.strip()
+        if not v:
+            v = None
+        return v
+
     @field_validator("password")
     @classmethod
     def validate_password(cls, v: str) -> str:
@@ -559,12 +586,27 @@ class MinerControllerPyASICConfigSchema(BaseModel):
             v = None
         return v
 
+    @field_validator("protocol")
+    @classmethod
+    def validate_protocol(cls, v: str) -> MinerControllerProtocol:
+        """Validate that protocol is a recognized MinerControllerProtocol."""
+        protocol_values = [protocol.value for protocol in MinerControllerProtocol]
+        if v not in protocol_values:
+            raise ValueError(f"protocol must be one of {protocol_values}")
+        return MinerControllerProtocol(v)
+
     def to_model(self) -> MinerControllerPyASICConfig:
         """
         Convert schema to MinerControllerPyASICConfig adapter configuration model instance.
         """
 
-        return MinerControllerPyASICConfig(ip=self.ip)
+        return MinerControllerPyASICConfig(
+            ip=self.ip,
+            port=self.port,
+            username=self.username,
+            password=self.password,
+            protocol=self.protocol,
+        )
 
     class Config:
         """Pydantic configuration."""
