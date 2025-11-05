@@ -10,6 +10,7 @@ from pyasic import AnyMiner
 from pyasic.device.algorithm.hashrate import AlgoHashRate
 from pyasic.rpc.cgminer import BaseMinerRPCAPI
 from pyasic.web.base import BaseWebAPI
+from pyasic.ssh.base import BaseSSH
 
 from edge_mining.adapters.utils import run_async_func
 from edge_mining.domain.common import Watts
@@ -119,6 +120,20 @@ class PyASICMinerController(MinerControlPort):
                         else:
                             if self.logger:
                                 self.logger.error("Unknown PyASIC Miner Controller Web Protocol")
+                    elif self.protocol == MinerControllerProtocol.SSH:
+                        if isinstance(self._miner.ssh, BaseSSH):
+                            if self.port:
+                                self._miner.ssh.port = self.port
+                            if self.password:
+                                self._miner.ssh.pwd = self.password
+                            if self.username:
+                                self._miner.ssh.username = self.username
+                        else:
+                            if self.logger:
+                                self.logger.error("Unknown PyASIC Miner Controller SSH Protocol")
+                    else:
+                        if self.logger:
+                            self.logger.error(f"Unknown PyASIC Miner Controller Protocol: {self.protocol}")
 
                     if self.logger:
                         self.logger.debug(f"Successfully retrieved miner instance from {self.ip}")
