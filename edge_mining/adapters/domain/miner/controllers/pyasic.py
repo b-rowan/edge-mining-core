@@ -8,7 +8,7 @@ from typing import Dict, Optional, cast
 import pyasic
 from pyasic import AnyMiner
 from pyasic.device.algorithm.hashrate import AlgoHashRate
-from pyasic.rpc.cgminer import BaseMinerRPCAPI
+from pyasic.rpc.base import BaseMinerRPCAPI
 from pyasic.web.base import BaseWebAPI
 from pyasic.ssh.base import BaseSSH
 
